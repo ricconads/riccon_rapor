@@ -1,0 +1,13 @@
+# API anahtarları ve gizli bilgiler
+.env
+
+# Python önbellek dosyaları
+__pycache__/
+*.pyc
+*.pyo
+
+# Mac sistem dosyaları
+.DS_Store
+
+# Üretilen rapor dosyası
+output/
