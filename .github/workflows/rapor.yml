@@ -1,0 +1,70 @@
+name: Gunluk Rapor
+
+on:
+  schedule:
+    - cron: '0 5 * * *'
+  workflow_dispatch:
+
+jobs:
+  rapor-olustur:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Kodu cek
+        uses: actions/checkout@v3
+
+      - name: Python kur
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.11'
+
+      - name: Kutuphaneleri kur
+        run: |
+          pip install requests python-dotenv facebook-business google-ads ShopifyAPI
+
+      - name: Env dosyasini olustur
+        run: |
+          cat > .env << ENVEOF
+          META_APP_ID=${{ secrets.META_APP_ID }}
+          META_APP_SECRET=${{ secrets.META_APP_SECRET }}
+          META_LONG_TOKEN=${{ secrets.META_LONG_TOKEN }}
+          META_AD_ACCOUNT_ID=${{ secrets.META_AD_ACCOUNT_ID }}
+          GOOGLE_DEVELOPER_TOKEN=${{ secrets.GOOGLE_DEVELOPER_TOKEN }}
+          GOOGLE_CUSTOMER_ID=${{ secrets.GOOGLE_CUSTOMER_ID }}
+          GOOGLE_CLIENT_ID=${{ secrets.GOOGLE_CLIENT_ID }}
+          GOOGLE_CLIENT_SECRET=${{ secrets.GOOGLE_CLIENT_SECRET }}
+          GOOGLE_REFRESH_TOKEN=${{ secrets.GOOGLE_REFRESH_TOKEN }}
+          SHOPIFY_ACCESS_TOKEN=${{ secrets.SHOPIFY_ACCESS_TOKEN }}
+          SHOPIFY_STORE=${{ secrets.SHOPIFY_STORE }}
+          SHOPIFY_CLIENT_ID=${{ secrets.SHOPIFY_CLIENT_ID }}
+          SHOPIFY_CLIENT_SECRET=${{ secrets.SHOPIFY_CLIENT_SECRET }}
+          ENVEOF
+
+      - name: Google Ads yaml olustur
+        run: |
+          cat > google-ads.yaml << YAMLEOF
+          developer_token: ${{ secrets.GOOGLE_DEVELOPER_TOKEN }}
+          client_id: ${{ secrets.GOOGLE_CLIENT_ID }}
+          client_secret: ${{ secrets.GOOGLE_CLIENT_SECRET }}
+          refresh_token: ${{ secrets.GOOGLE_REFRESH_TOKEN }}
+          login_customer_id: ${{ secrets.GOOGLE_LOGIN_CUSTOMER_ID }}
+          customer_id: ${{ secrets.GOOGLE_CUSTOMER_ID }}
+          use_proto_plus: True
+          YAMLEOF
+
+      - name: Output klasoru olustur
+        run: mkdir -p output
+
+      - name: Raporu olustur
+        run: python3 scripts/rapor.py
+
+      - name: Netlify ye yukle
+        uses: nwtgck/actions-netlify@v2
+        with:
+          publish-dir: './output'
+          site-id: ${{ secrets.NETLIFY_SITE_ID }}
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          deploy-message: "Gunluk rapor guncellendi"
+          production-deploy: true
+        env:
+          NETLIFY_AUTH_TOKEN: ${{ secrets.NETLIFY_AUTH_TOKEN }}
