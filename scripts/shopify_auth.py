@@ -6,7 +6,7 @@ from urllib.parse import urlparse, parse_qs
 import webbrowser
 import threading
 
-load_dotenv('/Users/ahmetkidik/riccon/.env')
+load_dotenv('.env')
 
 shop = "t9dr0s-s8.myshopify.com"
 client_id = os.getenv('SHOPIFY_CLIENT_ID')

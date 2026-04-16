@@ -1,9 +1,9 @@
 from google.ads.googleads.client import GoogleAdsClient
 from dotenv import load_dotenv
 
-load_dotenv('/Users/ahmetkidik/riccon/.env')
+load_dotenv('.env')
 
-client = GoogleAdsClient.load_from_storage('/Users/ahmetkidik/riccon/google-ads.yaml')
+client = GoogleAdsClient.load_from_storage('google-ads.yaml')
 
 ga_service = client.get_service("GoogleAdsService")
 

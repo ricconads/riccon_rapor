@@ -2,9 +2,9 @@ from google.ads.googleads.client import GoogleAdsClient
 from dotenv import load_dotenv
 import os
 
-load_dotenv('/Users/ahmetkidik/riccon/.env')
+load_dotenv('.env')
 
-client = GoogleAdsClient.load_from_storage('/Users/ahmetkidik/riccon/google-ads.yaml')
+client = GoogleAdsClient.load_from_storage('google-ads.yaml')
 customer_id = "7145021056"
 
 def get_google_data(date_range):

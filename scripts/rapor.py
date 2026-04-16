@@ -8,7 +8,7 @@ from shopify_rapor import get_shopify_data
 from dotenv import load_dotenv
 from datetime import datetime
 
-load_dotenv('/Users/ahmetkidik/riccon/.env')
+load_dotenv('.env')
 
 META_PERIODS = {
     "yesterday": "yesterday",
@@ -212,7 +212,7 @@ def build_period_html(period, m, g, s):
     return html
 
 def build_report():
-    with open('/Users/ahmetkidik/riccon/template.html', 'r', encoding='utf-8') as f:
+    with open('template.html', 'r', encoding='utf-8') as f:
         html = f.read()
 
     periods = ["yesterday", "last_7d", "last_30d", "this_month"]
@@ -280,7 +280,7 @@ def build_report():
         period_html = build_period_html(period, m, g, s)
         html = html.replace(f"%%PERIOD_{period.upper()}%%", period_html)
 
-    output_path = '/Users/ahmetkidik/riccon/output/rapor.html'
+    output_path = 'output/rapor.html'
     with open(output_path, 'w', encoding='utf-8') as f:
         f.write(html)
 

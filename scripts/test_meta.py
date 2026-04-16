@@ -2,7 +2,7 @@ import requests
 from dotenv import load_dotenv
 import os
 
-load_dotenv('/Users/ahmetkidik/riccon/.env')
+load_dotenv('.env')
 
 token = os.getenv('META_LONG_TOKEN')
 ad_account_id = os.getenv('META_AD_ACCOUNT_ID')

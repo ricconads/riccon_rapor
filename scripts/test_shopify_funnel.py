@@ -3,7 +3,7 @@ from dotenv import load_dotenv
 import os
 from datetime import datetime, timedelta
 
-load_dotenv('/Users/ahmetkidik/riccon/.env')
+load_dotenv('.env')
 
 token = os.getenv('SHOPIFY_ACCESS_TOKEN')
 shop = os.getenv('SHOPIFY_STORE')
