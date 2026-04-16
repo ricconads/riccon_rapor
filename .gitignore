@@ -11,3 +11,5 @@ __pycache__/
 
 # Üretilen rapor dosyası
 output/
+client_secret.json
+google-ads.yaml

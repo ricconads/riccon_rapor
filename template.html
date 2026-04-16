@@ -1,0 +1,121 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Riccon Performans Raporu</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+body{background:#f0f6fb;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;font-size:13px}
+.header{background:#2c77a3;padding:20px 24px;display:flex;align-items:center;justify-content:center}
+.logo-brand{font-size:28px;font-weight:700;color:white;letter-spacing:3px}
+.logo-sub{font-size:10px;color:rgba(255,255,255,0.65);letter-spacing:0.2em;text-transform:uppercase;text-align:center;margin-top:3px}
+.filters{padding:12px 24px 4px;display:flex;gap:6px}
+.fb{font-size:11px;padding:5px 14px;border-radius:20px;border:1.5px solid #2c77a3;background:white;color:#2c77a3;cursor:pointer;font-family:inherit}
+.fb.active{background:#2c77a3;color:white}
+.period-content{display:none}
+.period-content.active{display:block}
+.wrap{padding:0 24px}
+.summary-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin:12px 0}
+.scard{background:white;border-radius:10px;border:0.5px solid #cce0ee;padding:14px 16px;border-top:3px solid #2c77a3}
+.scard.green{border-top-color:#2e9e62}
+.scard.orange{border-top-color:#e07b2a}
+.scard.purple{border-top-color:#6b5acd}
+.scard-label{font-size:10px;color:#7a9fb5;text-transform:uppercase;letter-spacing:0.05em;margin-bottom:6px}
+.scard-value{font-size:22px;font-weight:500;color:#1a3a50;line-height:1}
+.scard-sub{font-size:11px;margin-top:4px}
+.plabel{font-size:10px;font-weight:600;color:#2c77a3;text-transform:uppercase;letter-spacing:0.07em;padding:10px 0 6px}
+.platform-block{background:white;border-radius:10px;border:0.5px solid #cce0ee;padding:14px 16px;margin-bottom:10px}
+.pb-header{display:flex;align-items:center;gap:8px;margin-bottom:12px;padding-bottom:10px;border-bottom:0.5px solid #e8f2f9}
+.pb-icon{width:28px;height:28px;border-radius:6px;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:700;flex-shrink:0}
+.pb-name{font-size:13px;font-weight:500;color:#1a3a50}
+.metrics-row{display:grid;gap:8px}
+.mc{background:#f6f9fc;border-radius:7px;padding:10px 12px}
+.mc-label{font-size:10px;color:#7a9fb5;margin-bottom:3px}
+.mc-value{font-size:16px;font-weight:500;color:#1a3a50;line-height:1.1}
+.mc-change{font-size:10px;margin-top:3px}
+.up{color:#2e9e62}.down{color:#d94040}.neutral{color:#7a9fb5}
+.charts-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:10px}
+.chart-card{background:white;border-radius:10px;border:0.5px solid #cce0ee;padding:14px 16px;height:320px;display:flex;flex-direction:column}
+.cc-title{font-size:11px;font-weight:500;color:#1a3a50;margin-bottom:10px;padding-bottom:8px;border-bottom:0.5px solid #e8f2f9;display:flex;justify-content:space-between;align-items:center;flex-shrink:0}
+.cc-count{font-size:10px;color:#7a9fb5}
+.scroll-area{flex:1;overflow-y:auto;padding-right:4px}
+.scroll-area::-webkit-scrollbar{width:3px}
+.scroll-area::-webkit-scrollbar-track{background:#f0f6fb;border-radius:2px}
+.scroll-area::-webkit-scrollbar-thumb{background:#cce0ee;border-radius:2px}
+.bar-row{display:flex;align-items:center;gap:6px;margin-bottom:7px}
+.bar-rank{font-size:10px;color:#b0c8d8;width:14px;text-align:right;flex-shrink:0}
+.bar-name{font-size:10px;color:#4a6a80;width:150px;flex-shrink:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.bar-track{flex:1;background:#e8f2f9;border-radius:3px;height:8px}
+.bar-fill{height:8px;border-radius:3px}
+.bar-val{font-size:10px;color:#1a3a50;font-weight:500;width:65px;text-align:right;flex-shrink:0}
+.funnel-item{display:flex;align-items:center;gap:8px;margin-bottom:10px}
+.funnel-label{width:110px;font-size:10px;color:#4a6a80;text-align:right;flex-shrink:0}
+.funnel-bar{flex:1;display:flex;justify-content:center}
+.funnel-fill{border-radius:4px;height:26px;display:flex;align-items:center;justify-content:center;min-width:40px}
+.funnel-pct{font-size:10px;color:#7a9fb5;width:38px;text-align:right;flex-shrink:0}
+.pie-wrap{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center}
+.pie-legend{display:flex;gap:14px;justify-content:center;margin-top:10px;flex-shrink:0}
+.pie-dot{width:9px;height:9px;border-radius:50%;flex-shrink:0;margin-top:1px}
+.pie-label{font-size:10px;color:#4a6a80}
+.footer{text-align:center;padding:20px;font-size:10px;color:#a0bfcf;border-top:0.5px solid #cce0ee;margin-top:8px}
+</style>
+</head>
+<body>
+
+<div class="header">
+  <div style="text-align:center">
+    <div class="logo-brand">RICCON</div>
+    <div class="logo-sub">Performans Raporu</div>
+  </div>
+</div>
+
+<div class="filters">
+  <button class="fb active" onclick="showPeriod('yesterday',this)">Dün</button>
+  <button class="fb" onclick="showPeriod('last_7d',this)">Son 7 Gün</button>
+  <button class="fb" onclick="showPeriod('last_30d',this)">Son 30 Gün</button>
+  <button class="fb" onclick="showPeriod('this_month',this)">Bu Ay</button>
+</div>
+
+%%PERIOD_YESTERDAY%%
+%%PERIOD_LAST_7D%%
+%%PERIOD_LAST_30D%%
+%%PERIOD_THIS_MONTH%%
+
+<div class="footer">riccon.com.tr · 2026</div>
+
+<script>
+var pieCharts={};
+function buildPie(id,meta,google){
+  var ctx=document.getElementById(id);
+  if(!ctx)return;
+  if(pieCharts[id]){pieCharts[id].destroy();}
+  pieCharts[id]=new Chart(ctx,{
+    type:'doughnut',
+    data:{labels:['Meta','Google'],datasets:[{data:[meta,google],backgroundColor:['#1877f2','#ea4335'],borderWidth:0}]},
+    options:{responsive:false,plugins:{legend:{display:false},tooltip:{callbacks:{label:function(c){return c.label+': ₺'+c.raw.toLocaleString('tr-TR');}}}},cutout:'65%'}
+  });
+}
+function showPeriod(period,btn){
+  document.querySelectorAll('.period-content').forEach(function(el){el.classList.remove('active');});
+  document.querySelectorAll('.fb').forEach(function(b){b.classList.remove('active');});
+  document.getElementById('period-'+period).classList.add('active');
+  btn.classList.add('active');
+  var d=window.pieDataMap[period];
+  if(d){
+    buildPie('pie_spend_'+period,d.metaSpend,d.googleSpend);
+    buildPie('pie_roas_'+period,d.metaRoasVal,d.googleRoasVal);
+  }
+}
+window.addEventListener('load',function(){
+  var d=window.pieDataMap['yesterday'];
+  if(d){
+    buildPie('pie_spend_yesterday',d.metaSpend,d.googleSpend);
+    buildPie('pie_roas_yesterday',d.metaRoasVal,d.googleRoasVal);
+  }
+});
+%%PIE_DATA_MAP%%
+</script>
+</body>
+</html>
