@@ -108,7 +108,7 @@ def build_period_html(period, m, g, s):
       <div class="mc"><div class="mc-label">Toplam ROAS</div><div class="mc-value">{total_roas}x</div><div class="mc-change neutral">—</div></div>
       <div class="mc"><div class="mc-label">Ort. Sepet</div><div class="mc-value">₺{s["aov"]:,.2f}</div><div class="mc-change neutral">—</div></div>
       <div class="mc"><div class="mc-label">Sipariş</div><div class="mc-value">{total_orders}</div><div class="mc-change neutral">—</div></div>
-      <div class="mc"><div class="mc-label">Dönüşüm Oranı</div><div class="mc-value">%{donusum_orani}</div><div class="mc-change neutral">—</div></div>
+
     </div>
   </div>
 
