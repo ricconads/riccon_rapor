@@ -74,13 +74,11 @@ jobs:
       - name: Raporu olustur
         run: python3 scripts/rapor.py
 
+      - name: Netlify CLI kur
+        run: npm install -g netlify-cli
+
       - name: Netlify ye yukle
-        uses: nwtgck/actions-netlify@v3
-        with:
-          publish-dir: './output'
-          site-id: ${{ secrets.NETLIFY_SITE_ID }}
-          github-token: ${{ secrets.GITHUB_TOKEN }}
-          deploy-message: "Gunluk rapor guncellendi"
-          production-deploy: true
         env:
           NETLIFY_AUTH_TOKEN: ${{ secrets.NETLIFY_AUTH_TOKEN }}
+          NETLIFY_SITE_ID: ${{ secrets.NETLIFY_SITE_ID }}
+        run: netlify deploy --prod --dir=output --auth=$NETLIFY_AUTH_TOKEN --site=$NETLIFY_SITE_ID
