@@ -280,7 +280,7 @@ def build_report():
         period_html = build_period_html(period, m, g, s)
         html = html.replace(f"%%PERIOD_{period.upper()}%%", period_html)
 
-    output_path = 'output/rapor.html'
+    output_path = 'output/index.html'
     with open(output_path, 'w', encoding='utf-8') as f:
         f.write(html)
 
