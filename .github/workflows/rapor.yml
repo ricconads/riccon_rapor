@@ -72,6 +72,8 @@ jobs:
         run: mkdir -p output
 
       - name: Raporu olustur
+        env:
+          TZ_OFFSET: "3"
         run: python3 scripts/rapor.py
 
       - name: Netlify CLI kur

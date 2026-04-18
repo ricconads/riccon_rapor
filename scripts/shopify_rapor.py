@@ -2,6 +2,8 @@ import requests
 from dotenv import load_dotenv
 import os
 from datetime import datetime, timedelta
+import os
+TZ_OFFSET = int(os.environ.get("TZ_OFFSET", "3"))
 import re
 from collections import defaultdict
 
@@ -12,7 +14,7 @@ shop = os.getenv('SHOPIFY_STORE')
 headers = {"X-Shopify-Access-Token": token}
 
 def get_date_range(period):
-    today = datetime.now().date()
+    today = (datetime.utcnow() + timedelta(hours=TZ_OFFSET)).date()
     if period == "yesterday":
         start = today - timedelta(days=1)
         end = today - timedelta(days=1)
