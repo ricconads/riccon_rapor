@@ -27,7 +27,9 @@ def get_date_range(period):
     elif period == "this_month":
         start = today.replace(day=1)
         end = today - timedelta(days=1)
-    return start.isoformat(), end.isoformat()
+    start_utc = f"{(datetime.strptime(str(start), '%Y-%m-%d') - timedelta(hours=TZ_OFFSET)).strftime('%Y-%m-%dT%H:%M:%SZ')}"
+    end_utc = f"{(datetime.strptime(str(end), '%Y-%m-%d') + timedelta(hours=24-TZ_OFFSET) - timedelta(seconds=1)).strftime('%Y-%m-%dT%H:%M:%SZ')}"
+    return start_utc, end_utc
 
 def get_next_url(link_header):
     if not link_header:
@@ -41,15 +43,15 @@ def get_next_url(link_header):
     return None
 
 def get_shopify_data(period):
-    start, end = get_date_range(period)
+    start_utc, end_utc = get_date_range(period)
 
     url = f"https://{shop}/admin/api/2024-01/orders.json"
     params = {
         "status": "any",
-        "created_at_min": f"{start}T00:00:00+03:00",
-        "created_at_max": f"{end}T23:59:59+03:00",
+        "created_at_min": start_utc,
+        "created_at_max": end_utc,
         "limit": 250,
-        "fields": "total_price,subtotal_price,total_discounts,financial_status,line_items,created_at"
+        "fields": "total_price,subtotal_price,financial_status,line_items,created_at"
     }
 
     all_orders = []
@@ -70,11 +72,11 @@ def get_shopify_data(period):
     hourly = defaultdict(lambda: {"count": 0, "revenue": 0.0})
 
     for order in all_orders:
-        if order.get('financial_status') not in ['voided']:
+        if True:
             subtotal = float(order.get('subtotal_price', 0))
             total_sales += subtotal
             total_orders += 1
-            hour = int(order['created_at'][11:13])
+            hour = (datetime.strptime(order['created_at'], '%Y-%m-%dT%H:%M:%S%z') + timedelta(hours=TZ_OFFSET)).hour
             hourly[hour]["count"] += 1
             hourly[hour]["revenue"] += subtotal
             for item in order.get('line_items', []):
@@ -96,8 +98,8 @@ def get_shopify_data(period):
 
     checkout_url = f"https://{shop}/admin/api/2024-01/checkouts.json"
     checkout_params = {
-        "created_at_min": f"{start}T00:00:00+03:00",
-        "created_at_max": f"{end}T23:59:59+03:00",
+        "created_at_min": start_utc,
+        "created_at_max": end_utc,
         "limit": 250
     }
     all_checkouts = []
