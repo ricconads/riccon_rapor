@@ -223,6 +223,7 @@ def build_report():
 
     for period in periods:
         print(f"Veri çekiliyor: {period}...")
+        import os as _os; from datetime import datetime as _dt, timedelta as _td; _tz=int(_os.environ.get("TZ_OFFSET","3")); _today=(_dt.utcnow()+_td(hours=_tz)).date(); print(f"DEBUG: bugun={_today}, dun={_today-_td(days=1)}, tz={_tz}")
         meta = get_meta(META_PERIODS[period])
         google = get_google(GOOGLE_PERIODS[period])
         shopify = get_shopify_data(period)
