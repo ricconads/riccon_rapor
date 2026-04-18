@@ -2,8 +2,6 @@ import requests
 from dotenv import load_dotenv
 import os
 from datetime import datetime, timedelta
-import os
-TZ_OFFSET = int(os.environ.get("TZ_OFFSET", "3"))
 import re
 from collections import defaultdict
 
@@ -12,6 +10,8 @@ load_dotenv('.env')
 token = os.getenv('SHOPIFY_ACCESS_TOKEN')
 shop = os.getenv('SHOPIFY_STORE')
 headers = {"X-Shopify-Access-Token": token}
+
+TZ_OFFSET = int(os.environ.get("TZ_OFFSET", "3"))
 
 def get_date_range(period):
     today = (datetime.utcnow() + timedelta(hours=TZ_OFFSET)).date()
@@ -46,10 +46,10 @@ def get_shopify_data(period):
     url = f"https://{shop}/admin/api/2024-01/orders.json"
     params = {
         "status": "any",
-        "created_at_min": f"{start}T00:00:00",
-        "created_at_max": f"{end}T23:59:59",
+        "created_at_min": f"{start}T00:00:00+03:00",
+        "created_at_max": f"{end}T23:59:59+03:00",
         "limit": 250,
-        "fields": "total_price,total_discounts,financial_status,line_items,created_at"
+        "fields": "total_price,subtotal_price,total_discounts,financial_status,line_items,created_at"
     }
 
     all_orders = []
@@ -70,18 +70,18 @@ def get_shopify_data(period):
     hourly = defaultdict(lambda: {"count": 0, "revenue": 0.0})
 
     for order in all_orders:
-        if order.get('financial_status') not in ['refunded', 'voided']:
-            price = float(order.get('total_price', 0))
-            total_sales += price
+        if order.get('financial_status') not in ['voided']:
+            subtotal = float(order.get('subtotal_price', 0))
+            total_sales += subtotal
             total_orders += 1
             hour = int(order['created_at'][11:13])
             hourly[hour]["count"] += 1
-            hourly[hour]["revenue"] += price
+            hourly[hour]["revenue"] += subtotal
             for item in order.get('line_items', []):
                 name = item.get('title', '')
                 qty = int(item.get('quantity', 0))
-                item_price = float(item.get('price', 0)) * qty
-                product_sales[name] = product_sales.get(name, 0) + item_price
+                price = float(item.get('price', 0)) * qty
+                product_sales[name] = product_sales.get(name, 0) + price
 
     aov = round(total_sales / total_orders, 2) if total_orders > 0 else 0
     top_products = sorted(product_sales.items(), key=lambda x: x[1], reverse=True)[:20]
@@ -96,8 +96,8 @@ def get_shopify_data(period):
 
     checkout_url = f"https://{shop}/admin/api/2024-01/checkouts.json"
     checkout_params = {
-        "created_at_min": f"{start}T00:00:00",
-        "created_at_max": f"{end}T23:59:59",
+        "created_at_min": f"{start}T00:00:00+03:00",
+        "created_at_max": f"{end}T23:59:59+03:00",
         "limit": 250
     }
     all_checkouts = []
@@ -131,7 +131,4 @@ if __name__ == "__main__":
         result = get_shopify_data(period)
         print(f"Toplam Satış: ₺{result['total_sales']}")
         print(f"Sipariş: {result['total_orders']}")
-        print("Saatlik:")
-        for h in result['hourly_data']:
-            if h['count'] > 0:
-                print(f"  {h['hour']} | {h['count']} sipariş | ₺{h['revenue']}")
+        print(f"AOV: ₺{result['aov']}")
