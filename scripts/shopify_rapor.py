@@ -27,8 +27,8 @@ def get_date_range(period):
     elif period == "this_month":
         start = today.replace(day=1)
         end = today - timedelta(days=1)
-    start_utc = f"{(datetime.strptime(str(start), '%Y-%m-%d') - timedelta(hours=TZ_OFFSET)).strftime('%Y-%m-%dT%H:%M:%SZ')}"
-    end_utc = f"{(datetime.strptime(str(end), '%Y-%m-%d') + timedelta(hours=24-TZ_OFFSET) - timedelta(seconds=1)).strftime('%Y-%m-%dT%H:%M:%SZ')}"
+    start_utc = (datetime.strptime(str(start), '%Y-%m-%d') - timedelta(hours=TZ_OFFSET)).strftime('%Y-%m-%dT%H:%M:%SZ')
+    end_utc = (datetime.strptime(str(end), '%Y-%m-%d') + timedelta(hours=24-TZ_OFFSET) - timedelta(seconds=1)).strftime('%Y-%m-%dT%H:%M:%SZ')
     return start_utc, end_utc
 
 def get_next_url(link_header):
@@ -51,7 +51,7 @@ def get_shopify_data(period):
         "created_at_min": start_utc,
         "created_at_max": end_utc,
         "limit": 250,
-        "fields": "total_price,subtotal_price,financial_status,line_items,created_at"
+        "fields": "subtotal_price,total_discounts,total_price,financial_status,line_items,created_at"
     }
 
     all_orders = []
@@ -66,26 +66,32 @@ def get_shopify_data(period):
         url = next_url
         params = {}
 
-    total_sales = 0
+    subtotal_sum = 0
+    discount_sum = 0
     total_orders = 0
     product_sales = {}
     hourly = defaultdict(lambda: {"count": 0, "revenue": 0.0})
 
     for order in all_orders:
-        if True:
-            subtotal = float(order.get('subtotal_price', 0))
-            total_sales += subtotal
-            total_orders += 1
-            hour = (datetime.strptime(order['created_at'], '%Y-%m-%dT%H:%M:%S%z') + timedelta(hours=TZ_OFFSET)).hour
-            hourly[hour]["count"] += 1
-            hourly[hour]["revenue"] += subtotal
-            for item in order.get('line_items', []):
-                name = item.get('title', '')
-                qty = int(item.get('quantity', 0))
-                price = float(item.get('price', 0)) * qty
-                product_sales[name] = product_sales.get(name, 0) + price
+        total_orders += 1
+        sub = float(order.get('subtotal_price', 0))
+        disc = float(order.get('total_discounts', 0))
+        subtotal_sum += sub
+        discount_sum += disc
+        order_brut = sub - disc
+        hour = (datetime.strptime(order['created_at'], '%Y-%m-%dT%H:%M:%S%z') + timedelta(hours=TZ_OFFSET)).hour
+        hourly[hour]["count"] += 1
+        hourly[hour]["revenue"] += order_brut
+        for item in order.get('line_items', []):
+            name = item.get('title', '')
+            qty = int(item.get('quantity', 0))
+            price = float(item.get('price', 0)) * qty
+            product_sales[name] = product_sales.get(name, 0) + price
 
-    aov = round(total_sales / total_orders, 2) if total_orders > 0 else 0
+    # Brüt satış = subtotal - indirim (panel formülüyle birebir)
+    brut_satis = subtotal_sum - discount_sum
+
+    aov = round(brut_satis / total_orders, 2) if total_orders > 0 else 0
     top_products = sorted(product_sales.items(), key=lambda x: x[1], reverse=True)[:20]
 
     hourly_data = []
@@ -117,7 +123,7 @@ def get_shopify_data(period):
     add_to_cart = checkout_count + total_orders
 
     return {
-        "total_sales": round(total_sales, 2),
+        "total_sales": round(brut_satis, 2),
         "total_orders": total_orders,
         "aov": aov,
         "top_products": top_products,
@@ -131,6 +137,6 @@ if __name__ == "__main__":
     for period in ["yesterday"]:
         print(f"\n=== {period.upper()} ===")
         result = get_shopify_data(period)
-        print(f"Toplam Satış: ₺{result['total_sales']}")
-        print(f"Sipariş: {result['total_orders']}")
+        print(f"Brut Satis: ₺{result['total_sales']}")
+        print(f"Siparis: {result['total_orders']}")
         print(f"AOV: ₺{result['aov']}")
