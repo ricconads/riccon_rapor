@@ -31,7 +31,9 @@ jobs:
           login_customer_id: ${{ secrets.GOOGLE_LOGIN_CUSTOMER_ID }}
           use_proto_plus: True
           EOF
-
+      - name: Output klasörü oluştur
+        run: mkdir -p output
+        
       - name: Raporu oluştur
         env:
           META_ACCESS_TOKEN: ${{ secrets.META_LONG_TOKEN }}
