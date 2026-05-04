@@ -11,27 +11,33 @@ jobs:
 
     steps:
       - name: Repo'yu çek
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
 
       - name: Python kur
-        uses: actions/setup-python@v4
+        uses: actions/setup-python@v5
         with:
           python-version: '3.11'
 
       - name: Kütüphaneleri yükle
         run: pip install requests google-ads google-auth python-dotenv
 
+      - name: google-ads.yaml oluştur
+        run: |
+          cat > google-ads.yaml << EOF
+          developer_token: ${{ secrets.GOOGLE_DEVELOPER_TOKEN }}
+          client_id: ${{ secrets.GOOGLE_CLIENT_ID }}
+          client_secret: ${{ secrets.GOOGLE_CLIENT_SECRET }}
+          refresh_token: ${{ secrets.GOOGLE_REFRESH_TOKEN }}
+          login_customer_id: ${{ secrets.GOOGLE_LOGIN_CUSTOMER_ID }}
+          use_proto_plus: True
+          EOF
+
       - name: Raporu oluştur
         env:
-          META_ACCESS_TOKEN: ${{ secrets.META_ACCESS_TOKEN }}
+          META_ACCESS_TOKEN: ${{ secrets.META_LONG_TOKEN }}
           META_AD_ACCOUNT_ID: ${{ secrets.META_AD_ACCOUNT_ID }}
-          GOOGLE_ADS_DEVELOPER_TOKEN: ${{ secrets.GOOGLE_ADS_DEVELOPER_TOKEN }}
-          GOOGLE_ADS_CLIENT_ID: ${{ secrets.GOOGLE_ADS_CLIENT_ID }}
-          GOOGLE_ADS_CLIENT_SECRET: ${{ secrets.GOOGLE_ADS_CLIENT_SECRET }}
-          GOOGLE_ADS_REFRESH_TOKEN: ${{ secrets.GOOGLE_ADS_REFRESH_TOKEN }}
-          GOOGLE_ADS_CUSTOMER_ID: ${{ secrets.GOOGLE_ADS_CUSTOMER_ID }}
           SHOPIFY_STORE: ${{ secrets.SHOPIFY_STORE }}
-          SHOPIFY_TOKEN: ${{ secrets.SHOPIFY_TOKEN }}
+          SHOPIFY_TOKEN: ${{ secrets.SHOPIFY_ACCESS_TOKEN }}
         run: python scripts/rapor.py
 
       - name: Cloudflare Pages'e yükle
