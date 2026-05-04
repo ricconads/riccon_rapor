@@ -19,7 +19,7 @@ jobs:
           python-version: '3.11'
 
       - name: Kütüphaneleri yükle
-        run: pip install requests google-ads google-auth
+        run: pip install requests google-ads google-auth python-dotenv
 
       - name: Raporu oluştur
         env:
