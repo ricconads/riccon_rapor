@@ -39,7 +39,7 @@ jobs:
           META_LONG_TOKEN: ${{ secrets.META_LONG_TOKEN }}
           META_AD_ACCOUNT_ID: ${{ secrets.META_AD_ACCOUNT_ID }}
           SHOPIFY_STORE: ${{ secrets.SHOPIFY_STORE }}
-          SHOPIFY_TOKEN: ${{ secrets.SHOPIFY_ACCESS_TOKEN }}
+          SHOPIFY_ACCESS_TOKEN: ${{ secrets.SHOPIFY_ACCESS_TOKEN }}
         run: python scripts/rapor.py
 
       - name: Cloudflare Pages'e yükle
