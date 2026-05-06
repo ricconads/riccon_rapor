@@ -42,9 +42,8 @@ jobs:
           SHOPIFY_ACCESS_TOKEN: ${{ secrets.SHOPIFY_ACCESS_TOKEN }}
         run: python scripts/rapor.py
 
-      - name: Cloudflare Pages'e yükle
-        uses: cloudflare/wrangler-action@v3
+      - name: GitHub Pages'e yükle
+        uses: peaceiris/actions-gh-pages@v3
         with:
-          apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
-          accountId: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
-          command: pages deploy output --project-name=riccon-rapor
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          publish_dir: ./output
