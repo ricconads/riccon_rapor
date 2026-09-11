@@ -1,7 +1,7 @@
 import requests
 from dotenv import load_dotenv
 import os
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, timezone
 import re
 from collections import defaultdict
 
@@ -12,6 +12,25 @@ shop = os.getenv('SHOPIFY_STORE')
 headers = {"X-Shopify-Access-Token": token}
 
 TZ_OFFSET = int(os.environ.get("TZ_OFFSET", "3"))
+TR = timezone(timedelta(hours=TZ_OFFSET))
+
+def _get(url, **kwargs):
+    """Gecici ag hatalarinda birkac kez yeniden dener."""
+    import time as _time
+    son_hata = None
+    for deneme in range(4):
+        try:
+            r = requests.get(url, timeout=kwargs.pop('timeout', 120), **kwargs)
+            if r.status_code == 429:
+                _time.sleep(2 + deneme * 2)
+                continue
+            return r
+        except Exception as e:
+            son_hata = e
+            _time.sleep(1.5 * (deneme + 1))
+    raise son_hata
+
+
 
 def get_date_range(period):
     today = (datetime.utcnow() + timedelta(hours=TZ_OFFSET)).date()
@@ -56,7 +75,7 @@ def get_shopify_data(period):
 
     all_orders = []
     while True:
-        response = requests.get(url, headers=headers, params=params)
+        response = _get(url, headers=headers, params=params)
         data = response.json()
         orders = data.get('orders', [])
         all_orders.extend(orders)
@@ -79,7 +98,7 @@ def get_shopify_data(period):
         subtotal_sum += sub
         discount_sum += disc
         order_brut = sub - disc
-        hour = (datetime.strptime(order['created_at'], '%Y-%m-%dT%H:%M:%S%z') + timedelta(hours=TZ_OFFSET)).hour
+        hour = datetime.strptime(order['created_at'], '%Y-%m-%dT%H:%M:%S%z').astimezone(TR).hour
         hourly[hour]["count"] += 1
         hourly[hour]["revenue"] += order_brut
         for item in order.get('line_items', []):
@@ -110,7 +129,7 @@ def get_shopify_data(period):
     }
     all_checkouts = []
     while True:
-        checkout_response = requests.get(checkout_url, headers=headers, params=checkout_params)
+        checkout_response = _get(checkout_url, headers=headers, params=checkout_params)
         checkouts = checkout_response.json().get('checkouts', [])
         all_checkouts.extend(checkouts)
         next_url = get_next_url(checkout_response.headers.get('Link', ''))

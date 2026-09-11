@@ -4,11 +4,19 @@ import os
 
 load_dotenv('.env')
 
-client = GoogleAdsClient.load_from_storage('google-ads.yaml')
+_client = None
+
+def get_client():
+    """Baglanti ilk kullanimda kurulur; import aninda degil."""
+    global _client
+    if _client is None:
+        _client = GoogleAdsClient.load_from_storage('google-ads.yaml')
+    return _client
+
 customer_id = "7145021056"
 
 def get_google_data(date_range):
-    ga_service = client.get_service("GoogleAdsService")
+    ga_service = get_client().get_service("GoogleAdsService")
     
     query = f"""
         SELECT
@@ -59,7 +67,7 @@ def get_google_data(date_range):
     }
 
 def get_top_ads(date_range, limit=5):
-    ga_service = client.get_service("GoogleAdsService")
+    ga_service = get_client().get_service("GoogleAdsService")
 
     query = f"""
         SELECT

@@ -5,6 +5,9 @@ on:
     - cron: '0 5 * * *'
   workflow_dispatch:
 
+permissions:
+  contents: write
+
 jobs:
   rapor:
     runs-on: ubuntu-latest
@@ -31,11 +34,27 @@ jobs:
           login_customer_id: ${{ secrets.GOOGLE_LOGIN_CUSTOMER_ID }}
           use_proto_plus: True
           EOF
+
       - name: Output klasörü oluştur
         run: mkdir -p output
-        
+
+      # Gunluk arsiv: ozel tarih araligi ve onceki donem karsilastirmasi icin.
+      # Ilk calismada gecmisi doldurur, sonrakilerde sadece eksik gunu ekler.
+      # Hata verirse rapor yine de uretilsin diye is durdurulmuyor.
+      - name: Günlük arşivi güncelle
+        continue-on-error: true
+        env:
+          TZ_OFFSET: "3"
+          META_LONG_TOKEN: ${{ secrets.META_LONG_TOKEN }}
+          META_AD_ACCOUNT_ID: ${{ secrets.META_AD_ACCOUNT_ID }}
+          GOOGLE_CUSTOMER_ID: ${{ secrets.GOOGLE_CUSTOMER_ID }}
+          SHOPIFY_STORE: ${{ secrets.SHOPIFY_STORE }}
+          SHOPIFY_ACCESS_TOKEN: ${{ secrets.SHOPIFY_ACCESS_TOKEN }}
+        run: python scripts/arsiv.py --gun 365
+
       - name: Raporu oluştur
         env:
+          TZ_OFFSET: "3"
           META_LONG_TOKEN: ${{ secrets.META_LONG_TOKEN }}
           META_AD_ACCOUNT_ID: ${{ secrets.META_AD_ACCOUNT_ID }}
           SHOPIFY_STORE: ${{ secrets.SHOPIFY_STORE }}
@@ -47,3 +66,18 @@ jobs:
         with:
           github_token: ${{ secrets.GITHUB_TOKEN }}
           publish_dir: ./output
+
+      # Arsiv dosyasi ve indirilen icerik gorselleri repoda birikir,
+      # boylece ertesi gun sadece yeni gun cekilir.
+      - name: Arşivi repoya geri yaz
+        continue-on-error: true
+        run: |
+          git config user.name "ricconads"
+          git config user.email "ricconads@gmail.com"
+          git add data
+          if git diff --staged --quiet; then
+            echo "arşivde değişiklik yok"
+          else
+            git commit -m "arsiv guncellendi $(date -u +%Y-%m-%d)"
+            git push
+          fi
