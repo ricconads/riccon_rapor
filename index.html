@@ -7,190 +7,515 @@
 <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
 <style>
 *{box-sizing:border-box;margin:0;padding:0}
-body{background:#f0f6fb;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;font-size:13px}
-.header{background:#2c77a3;padding:20px 24px;display:flex;align-items:center;justify-content:center}
-.logo-brand{font-size:28px;font-weight:700;color:white;letter-spacing:3px}
-.logo-sub{font-size:10px;color:rgba(255,255,255,0.65);letter-spacing:0.2em;text-transform:uppercase;text-align:center;margin-top:3px}
-.filters{padding:12px 24px 4px;display:flex;gap:6px}
-.fb{font-size:11px;padding:5px 14px;border-radius:20px;border:1.5px solid #2c77a3;background:white;color:#2c77a3;cursor:pointer;font-family:inherit}
-.fb.active{background:#2c77a3;color:white}
-.period-content{display:none}
+:root{
+  --mavi:#2c77a3; --mavi-koyu:#1b567d; --mavi-acik:#4a9cc9;
+  --zemin:#eef4f9; --kart:#ffffff; --cizgi:#dbe8f2;
+  --metin:#14364d; --metin-soluk:#7695a9;
+  --yesil:#2e9e62; --turuncu:#e07b2a; --mor:#6b5acd; --kirmizi:#d94040;
+  --golge:0 1px 2px rgba(18,58,88,.05), 0 10px 26px -16px rgba(18,58,88,.35);
+}
+body{background-color:var(--zemin);background-image:radial-gradient(circle at 1px 1px,rgba(44,119,163,.16) 1px,transparent 0);background-size:22px 22px;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;font-size:13px;color:var(--metin);-webkit-font-smoothing:antialiased}
+
+/* ---------- ust bant ---------- */
+.header{position:relative;background:linear-gradient(135deg,#1b567d 0%,#2c77a3 55%,#3f92c0 100%);padding:30px 28px 34px;overflow:hidden;box-shadow:0 6px 22px -14px rgba(18,58,88,.55)}
+.header::after{content:"";position:absolute;right:-60px;top:-90px;width:280px;height:280px;border-radius:50%;background:rgba(255,255,255,.06)}
+.header::before{content:"";position:absolute;left:-40px;bottom:-120px;width:220px;height:220px;border-radius:50%;background:rgba(255,255,255,.05)}
+.header-in{position:relative;z-index:1;max-width:1400px;margin:0 auto;display:flex;align-items:flex-end;justify-content:space-between;gap:16px;flex-wrap:wrap}
+.logo-brand{font-size:30px;font-weight:700;color:#fff;letter-spacing:5px;line-height:1}
+.logo-sub{font-size:10px;color:rgba(255,255,255,.7);letter-spacing:.22em;text-transform:uppercase;margin-top:6px}
+.header-meta{text-align:right;font-size:10.5px;color:rgba(255,255,255,.75);line-height:1.7}
+.header-meta b{color:#fff;font-weight:500}
+
+/* ---------- filtre bari ---------- */
+.wrap{padding:0 28px;max-width:1400px;margin:0 auto}
+.filterbar{background:var(--kart);border:1px solid var(--cizgi);border-radius:14px;box-shadow:var(--golge);
+  margin:22px 0 18px;padding:13px 15px;display:flex;align-items:center;gap:14px;flex-wrap:wrap;justify-content:space-between}
+.seg-group{display:flex;align-items:center;gap:10px;flex-wrap:wrap}
+.seg-title{font-size:9.5px;font-weight:600;letter-spacing:.09em;text-transform:uppercase;color:var(--metin-soluk)}
+.segmented{display:inline-flex;background:#f2f7fb;border:1px solid var(--cizgi);border-radius:11px;padding:3px;gap:2px}
+.seg{font-family:inherit;font-size:11.5px;font-weight:500;padding:7px 15px;border:0;border-radius:8px;background:transparent;color:#4a7691;cursor:pointer;transition:.15s;white-space:nowrap}
+.seg:hover{background:#e6f0f7;color:var(--mavi-koyu)}
+.seg.active{background:linear-gradient(135deg,var(--mavi-koyu),var(--mavi-acik));color:#fff;box-shadow:0 3px 10px -3px rgba(27,86,125,.6)}
+
+.daterange{display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+.dp-wrap{position:relative;display:flex;align-items:center;gap:6px}
+.dr-field{display:flex;align-items:center;gap:9px;font-family:inherit;font-size:11.5px;color:#4a7691;
+  background:#f2f7fb;border:1px solid var(--cizgi);border-radius:11px;padding:9px 12px;cursor:pointer;transition:.16s;min-width:238px}
+.dr-field:hover{border-color:#bfd9ea;background:#eaf4fb;color:var(--mavi-koyu)}
+.dr-field.on{border-color:var(--mavi-acik);background:#eaf4fb;color:var(--mavi-koyu);box-shadow:0 0 0 3px rgba(74,156,201,.14)}
+.dr-field.dolu .dr-text{color:var(--metin);font-weight:600}
+.dr-ico{width:15px;height:15px;flex-shrink:0;opacity:.85}
+.dr-text{flex:1;text-align:left;white-space:nowrap}
+.dr-chev{width:13px;height:13px;flex-shrink:0;opacity:.6;transition:.18s}
+.dr-field.on .dr-chev{transform:rotate(180deg)}
+.dr-clear{display:flex;align-items:center;justify-content:center;width:28px;height:28px;border-radius:9px;
+  border:1px solid var(--cizgi);background:#fff;color:var(--metin-soluk);cursor:pointer;transition:.16s}
+.dr-clear:hover{color:var(--kirmizi);border-color:#f0c9c9;background:#fdf5f5}
+.dr-clear svg{width:13px;height:13px}
+
+/* ---------- takvim ---------- */
+.dp{position:absolute;top:calc(100% + 10px);right:0;z-index:60;display:flex;background:var(--kart);
+  border:1px solid var(--cizgi);border-radius:16px;box-shadow:0 4px 10px -4px rgba(18,58,88,.16),0 26px 60px -28px rgba(18,58,88,.6);
+  overflow:hidden;animation:dpIn .16s ease}
+@keyframes dpIn{from{opacity:0;transform:translateY(-6px)}to{opacity:1;transform:none}}
+.dp[hidden]{display:none}
+.dp-side{width:132px;background:linear-gradient(180deg,#f7fbfd,#eef5fa);border-right:1px solid #e7f0f7;padding:13px 10px;display:flex;flex-direction:column;gap:3px}
+.dp-side-t{font-size:9px;font-weight:600;letter-spacing:.09em;text-transform:uppercase;color:var(--metin-soluk);padding:0 6px 7px}
+.dp-hazir{font-family:inherit;font-size:11.5px;text-align:left;padding:7px 9px;border:0;border-radius:8px;
+  background:transparent;color:#4a7691;cursor:pointer;transition:.14s}
+.dp-hazir:hover{background:#dfeef8;color:var(--mavi-koyu)}
+.dp-hazir.secili{background:linear-gradient(135deg,var(--mavi-koyu),var(--mavi-acik));color:#fff}
+.dp-main{padding:13px 15px 12px}
+.dp-nav{display:flex;align-items:center;justify-content:space-between;gap:10px;margin-bottom:11px}
+.dp-ok{display:flex;align-items:center;justify-content:center;width:28px;height:28px;border-radius:9px;border:1px solid var(--cizgi);
+  background:#fff;color:#4a7691;cursor:pointer;transition:.14s}
+.dp-ok:hover:not(:disabled){background:#eaf4fb;border-color:#bfd9ea;color:var(--mavi-koyu)}
+.dp-ok:disabled{opacity:.35;cursor:not-allowed}
+.dp-ok svg{width:15px;height:15px}
+.dp-baslik{flex:1;display:flex;justify-content:space-around;gap:20px;font-size:12px;font-weight:600;color:var(--metin)}
+.dp-aylar{display:flex;gap:22px}
+.dp-ay{display:grid;grid-template-columns:repeat(7,32px);gap:2px}
+.dp-gunbasi{font-size:9px;font-weight:600;color:var(--metin-soluk);text-align:center;padding:4px 0 6px;text-transform:uppercase;letter-spacing:.03em}
+.dp-gun{height:30px;display:flex;align-items:center;justify-content:center;font-size:11.5px;color:var(--metin);
+  border:0;background:transparent;font-family:inherit;cursor:pointer;border-radius:8px;transition:.1s;position:relative}
+.dp-gun:hover:not(:disabled):not(.uc){background:#e3eff8}
+.dp-gun:disabled{color:#c3d5e1;cursor:not-allowed}
+.dp-gun.bos{visibility:hidden}
+.dp-gun.arada{background:#e6f2fa;border-radius:0}
+.dp-gun.uc{background:linear-gradient(135deg,var(--mavi-koyu),var(--mavi-acik));color:#fff;font-weight:600}
+.dp-gun.uc.bas{border-radius:8px 0 0 8px}
+.dp-gun.uc.bit{border-radius:0 8px 8px 0}
+.dp-gun.uc.tek{border-radius:8px}
+.dp-gun.bugun:not(.uc)::after{content:"";position:absolute;bottom:4px;left:50%;transform:translateX(-50%);width:4px;height:4px;border-radius:50%;background:var(--mavi-acik)}
+.dp-alt{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-top:12px;padding-top:11px;border-top:1px solid #eef5fa}
+.dp-secim{font-size:11px;color:var(--metin-soluk)}
+.dp-secim b{color:var(--metin);font-weight:600}
+.dp-btns{display:flex;gap:7px}
+
+@media(max-width:820px){
+  .dp{right:auto;left:0;flex-direction:column;max-width:calc(100vw - 40px)}
+  .dp-side{width:auto;flex-direction:row;flex-wrap:wrap;border-right:0;border-bottom:1px solid #e7f0f7}
+  .dp-side-t{width:100%;padding-bottom:4px}
+  .dp-aylar{flex-direction:column;gap:14px}
+  .dp-ay{grid-template-columns:repeat(7,1fr);width:100%}
+  .dr-field{min-width:0;width:100%}
+}
+.btn{font-family:inherit;font-size:11.5px;font-weight:500;padding:8px 16px;border:0;border-radius:9px;cursor:pointer;transition:.15s;white-space:nowrap}
+.btn-primary{background:linear-gradient(135deg,var(--mavi-koyu),var(--mavi-acik));color:#fff;box-shadow:0 3px 10px -3px rgba(27,86,125,.6)}
+.btn-primary:hover{filter:brightness(1.07)}
+.btn-primary:disabled{background:#cddeea;color:#8faabc;box-shadow:none;cursor:not-allowed}
+.btn-ghost{background:transparent;color:var(--metin-soluk);border:1px solid var(--cizgi)}
+.btn-ghost:hover{color:var(--kirmizi);border-color:#f0c9c9}
+.dr-hata{font-size:10.5px;color:var(--kirmizi);width:100%;padding-left:2px}
+
+/* ---------- ozel aralik basligi ---------- */
+.range-note{display:flex;align-items:center;gap:8px;background:#eaf4fb;border:1px solid #cfe4f2;border-radius:11px;padding:9px 13px;margin-bottom:14px;font-size:11.5px;color:var(--mavi-koyu)}
+.range-note b{font-weight:600}
+.range-tag{background:var(--mavi);color:#fff;font-size:10px;padding:2px 8px;border-radius:20px;letter-spacing:.03em}
+
+/* ---------- kartlar ---------- */
+.period-content{display:none;animation:fade .22s ease}
 .period-content.active{display:block}
-.wrap{padding:0 24px}
-.summary-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin:12px 0}
-.scard{background:white;border-radius:10px;border:0.5px solid #cce0ee;padding:14px 16px;border-top:3px solid #2c77a3}
-.scard.green{border-top-color:#2e9e62}
-.scard.orange{border-top-color:#e07b2a}
-.scard.purple{border-top-color:#6b5acd}
-.scard-label{font-size:10px;color:#7a9fb5;text-transform:uppercase;letter-spacing:0.05em;margin-bottom:6px}
-.scard-value{font-size:22px;font-weight:500;color:#1a3a50;line-height:1}
-.scard-sub{font-size:11px;margin-top:4px}
-.plabel{font-size:10px;font-weight:600;color:#2c77a3;text-transform:uppercase;letter-spacing:0.07em;padding:10px 0 6px}
-.platform-block{background:white;border-radius:10px;border:0.5px solid #cce0ee;padding:14px 16px;margin-bottom:10px}
-.pb-header{display:flex;align-items:center;gap:8px;margin-bottom:12px;padding-bottom:10px;border-bottom:0.5px solid #e8f2f9}
-.pb-icon{width:28px;height:28px;border-radius:6px;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:700;flex-shrink:0}
-.pb-name{font-size:13px;font-weight:500;color:#1a3a50}
-.metrics-row{display:grid;gap:8px}
-.mc{background:#f6f9fc;border-radius:7px;padding:10px 12px}
-.mc-label{font-size:10px;color:#7a9fb5;margin-bottom:3px}
-.mc-value{font-size:16px;font-weight:500;color:#1a3a50;line-height:1.1}
-.mc-change{font-size:10px;margin-top:3px}
-.up{color:#2e9e62}.down{color:#d94040}.neutral{color:#7a9fb5}
-.charts-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:10px}
-.chart-card{background:white;border-radius:10px;border:0.5px solid #cce0ee;padding:14px 16px;height:320px;display:flex;flex-direction:column}
-.cc-title{font-size:11px;font-weight:500;color:#1a3a50;margin-bottom:10px;padding-bottom:8px;border-bottom:0.5px solid #e8f2f9;display:flex;justify-content:space-between;align-items:center;flex-shrink:0}
-.cc-count{font-size:10px;color:#7a9fb5}
-.scroll-area{flex:1;overflow-y:auto;padding-right:4px}
-.scroll-area::-webkit-scrollbar{width:3px}
-.scroll-area::-webkit-scrollbar-track{background:#f0f6fb;border-radius:2px}
-.scroll-area::-webkit-scrollbar-thumb{background:#cce0ee;border-radius:2px}
-.bar-row{display:flex;align-items:center;gap:6px;margin-bottom:7px}
-.bar-rank{font-size:10px;color:#b0c8d8;width:14px;text-align:right;flex-shrink:0}
-.bar-name{font-size:10px;color:#4a6a80;width:150px;flex-shrink:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-.bar-track{flex:1;background:#e8f2f9;border-radius:3px;height:8px}
-.bar-fill{height:8px;border-radius:3px}
-.bar-val{font-size:10px;color:#1a3a50;font-weight:500;width:65px;text-align:right;flex-shrink:0}
-.funnel-item{display:flex;align-items:center;gap:8px;margin-bottom:10px}
-.funnel-label{width:110px;font-size:10px;color:#4a6a80;text-align:right;flex-shrink:0}
-.funnel-bar{flex:1;display:flex;justify-content:center}
-.funnel-fill{border-radius:4px;height:26px;display:flex;align-items:center;justify-content:center;min-width:40px}
-.funnel-pct{font-size:10px;color:#7a9fb5;width:38px;text-align:right;flex-shrink:0}
+@keyframes fade{from{opacity:0;transform:translateY(3px)}to{opacity:1;transform:none}}
+.summary-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin:0 0 14px}
+.scard{position:relative;background:var(--kart);border-radius:14px;border:1px solid var(--cizgi);box-shadow:var(--golge);padding:16px 18px;overflow:hidden}
+.scard::before{content:"";position:absolute;left:0;top:0;bottom:0;width:3px;background:var(--mavi)}
+.scard.green::before{background:var(--yesil)}
+.scard.orange::before{background:var(--turuncu)}
+.scard.purple::before{background:var(--mor)}
+.scard-label{font-size:9.5px;color:var(--metin-soluk);text-transform:uppercase;letter-spacing:.07em;margin-bottom:8px;font-weight:600}
+.scard-value{font-size:23px;font-weight:600;color:var(--metin);line-height:1;letter-spacing:-.02em}
+.scard-sub{font-size:11px;margin-top:7px;font-weight:600;display:flex;align-items:center;gap:4px}
+.plabel{font-size:9.5px;font-weight:600;color:var(--mavi);text-transform:uppercase;letter-spacing:.09em;padding:6px 0 8px}
+.platform-block{background:var(--kart);border-radius:14px;border:1px solid var(--cizgi);box-shadow:var(--golge);padding:15px 17px;margin-bottom:12px}
+.pb-header{display:flex;align-items:center;gap:9px;margin-bottom:13px;padding-bottom:11px;border-bottom:1px solid #eef5fa}
+.pb-icon{width:30px;height:30px;border-radius:9px;background:#fff;border:1px solid var(--cizgi);
+  display:flex;align-items:center;justify-content:center;padding:4px;flex-shrink:0;
+  box-shadow:0 1px 3px rgba(18,58,88,.07)}
+.pb-icon img{max-width:100%;max-height:100%;object-fit:contain;display:block}
+.pb-yakinda{margin-left:auto;font-size:9.5px;font-weight:600;letter-spacing:.05em;text-transform:uppercase;
+  color:#9a7b3f;background:#fdf4e3;border:1px solid #f2e2c2;border-radius:20px;padding:4px 10px}
+.platform-block.pasif .metrics-row{opacity:.55}
+.platform-block.pasif .mc-value{color:var(--metin-soluk)}
+.pb-name{font-size:13px;font-weight:600;color:var(--metin)}
+.metrics-row{display:grid;gap:9px}
+.mc{position:relative;overflow:hidden;background:linear-gradient(180deg,#fafcfe 0%,#f1f7fc 100%);border:1px solid #e7f0f7;border-radius:11px;padding:11px 13px;transition:.18s}
+.mc:hover{border-color:#cfe3f1;box-shadow:0 4px 14px -8px rgba(18,58,88,.35)}
+.mc-label{font-size:9.5px;color:var(--metin-soluk);margin-bottom:5px;font-weight:500}
+.mc-value{font-size:16.5px;font-weight:600;color:var(--metin);line-height:1.1;letter-spacing:-.01em}
+.mc-change{font-size:10px;margin-top:5px;font-weight:600;letter-spacing:.01em}
+.up{color:var(--yesil)}.down{color:var(--kirmizi)}.neutral{color:var(--metin-soluk)}
+.charts-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:12px}
+.chart-card{background:var(--kart);border-radius:14px;border:1px solid var(--cizgi);box-shadow:var(--golge);padding:15px 17px;height:326px;display:flex;flex-direction:column}
+.cc-title{font-size:11.5px;font-weight:600;color:var(--metin);margin-bottom:11px;padding-bottom:9px;padding-right:32px;border-bottom:1px solid #eef5fa;display:flex;justify-content:space-between;align-items:center;flex-shrink:0}
+.cc-count{font-size:10px;color:var(--metin-soluk);font-weight:400}
+.scroll-area{flex:1;overflow-y:auto;padding-right:5px}
+.scroll-area::-webkit-scrollbar{width:4px}
+.scroll-area::-webkit-scrollbar-track{background:#f2f7fb;border-radius:3px}
+.scroll-area::-webkit-scrollbar-thumb{background:#c7dded;border-radius:3px}
+.bar-row{display:flex;align-items:center;gap:7px;margin-bottom:8px}
+.bar-rank{font-size:9.5px;color:#a9c4d6;width:15px;text-align:right;flex-shrink:0}
+.bar-name{font-size:10.5px;color:#48697f;width:150px;flex-shrink:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.bar-track{flex:1;background:#eaf2f8;border-radius:4px;height:8px}
+.bar-fill{height:8px;border-radius:4px}
+.bar-val{font-size:10.5px;color:var(--metin);font-weight:600;width:68px;text-align:right;flex-shrink:0}
+.bos{font-size:11px;color:var(--metin-soluk);padding:14px 2px;text-align:center}
 .pie-wrap{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center}
-.pie-legend{display:flex;gap:14px;justify-content:center;margin-top:10px;flex-shrink:0}
+.pie-legend{display:flex;gap:16px;justify-content:center;margin-top:11px;flex-shrink:0}
 .pie-dot{width:9px;height:9px;border-radius:50%;flex-shrink:0;margin-top:1px}
-.pie-label{font-size:10px;color:#4a6a80}
-.footer{text-align:center;padding:20px;font-size:10px;color:#a0bfcf;border-top:0.5px solid #cce0ee;margin-top:8px}
+.pie-label{font-size:10.5px;color:#48697f}
+/* ---------- dusuk opaklikli semboller ---------- */
+.scard::after,.mc::after,.chart-card::after{content:"";position:absolute;background-repeat:no-repeat;background-size:contain;pointer-events:none}
+.scard::after{right:14px;bottom:12px;width:52px;height:52px;opacity:.07}
+.mc::after{right:9px;top:50%;transform:translateY(-50%);width:30px;height:30px;opacity:.09}
+.chart-card{position:relative}
+.chart-card::after{right:16px;top:14px;width:22px;height:22px;opacity:.16}
+.scard[data-ico='harcama']::after,.mc[data-ico='harcama']::after,.chart-card[data-ico='harcama']::after{background-image:url("data:image/svg+xml;utf8,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%2314364d' stroke-width='1.5' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M3 7.5h14.5a2 2 0 0 1 2 2v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V7.5Z'/%3E%3Cpath d='M3 7.5V6.2A2 2 0 0 1 5 4.2h10.5'/%3E%3Ccircle cx='16.2' cy='13' r='1.4'/%3E%3C/svg%3E")}
+.scard[data-ico='gelir']::after,.mc[data-ico='gelir']::after,.chart-card[data-ico='gelir']::after{background-image:url("data:image/svg+xml;utf8,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%2314364d' stroke-width='1.5' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M3 17.5 9.5 11l4 4L21 7.5'/%3E%3Cpath d='M14.5 7.5H21v6.5'/%3E%3C/svg%3E")}
+.scard[data-ico='roas']::after,.mc[data-ico='roas']::after,.chart-card[data-ico='roas']::after{background-image:url("data:image/svg+xml;utf8,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%2314364d' stroke-width='1.5' stroke-linecap='round' stroke-linejoin='round'%3E%3Ccircle cx='12' cy='12' r='8.2'/%3E%3Ccircle cx='12' cy='12' r='4.2'/%3E%3Ccircle cx='12' cy='12' r='1'/%3E%3C/svg%3E")}
+.scard[data-ico='siparis']::after,.mc[data-ico='siparis']::after,.chart-card[data-ico='siparis']::after{background-image:url("data:image/svg+xml;utf8,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%2314364d' stroke-width='1.5' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M6.5 2.5 4.5 6.5V20a2 2 0 0 0 2 2h11a2 2 0 0 0 2-2V6.5l-2-4H6.5Z'/%3E%3Cpath d='M4.5 6.5h15'/%3E%3Cpath d='M15.5 10.5a3.5 3.5 0 0 1-7 0'/%3E%3C/svg%3E")}
+.scard[data-ico='sepet']::after,.mc[data-ico='sepet']::after,.chart-card[data-ico='sepet']::after{background-image:url("data:image/svg+xml;utf8,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%2314364d' stroke-width='1.5' stroke-linecap='round' stroke-linejoin='round'%3E%3Ccircle cx='9.5' cy='20' r='1.5'/%3E%3Ccircle cx='17.5' cy='20' r='1.5'/%3E%3Cpath d='M2.5 3.5h3l2.6 12a2 2 0 0 0 2 1.6h7.2a2 2 0 0 0 2-1.6L21 7.5H6.2'/%3E%3C/svg%3E")}
+.scard[data-ico='tiklama']::after,.mc[data-ico='tiklama']::after,.chart-card[data-ico='tiklama']::after{background-image:url("data:image/svg+xml;utf8,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%2314364d' stroke-width='1.5' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M9 8.5 19 13l-4.3 1.7L13 19 9 8.5Z'/%3E%3Cpath d='M4.5 4.5 6 6M4 12h2M12 4v2'/%3E%3C/svg%3E")}
+.scard[data-ico='oran']::after,.mc[data-ico='oran']::after,.chart-card[data-ico='oran']::after{background-image:url("data:image/svg+xml;utf8,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%2314364d' stroke-width='1.5' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M18.5 5.5 5.5 18.5'/%3E%3Ccircle cx='8' cy='8' r='2.4'/%3E%3Ccircle cx='16' cy='16' r='2.4'/%3E%3C/svg%3E")}
+.scard[data-ico='gosterim']::after,.mc[data-ico='gosterim']::after,.chart-card[data-ico='gosterim']::after{background-image:url("data:image/svg+xml;utf8,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%2314364d' stroke-width='1.5' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M2.5 12S6 5.5 12 5.5 21.5 12 21.5 12 18 18.5 12 18.5 2.5 12 2.5 12Z'/%3E%3Ccircle cx='12' cy='12' r='3'/%3E%3C/svg%3E")}
+.scard[data-ico='donusum']::after,.mc[data-ico='donusum']::after,.chart-card[data-ico='donusum']::after{background-image:url("data:image/svg+xml;utf8,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%2314364d' stroke-width='1.5' stroke-linecap='round' stroke-linejoin='round'%3E%3Ccircle cx='12' cy='12' r='8.5'/%3E%3Cpath d='m8.3 12.3 2.6 2.6 4.8-5.2'/%3E%3C/svg%3E")}
+.scard[data-ico='urun']::after,.mc[data-ico='urun']::after,.chart-card[data-ico='urun']::after{background-image:url("data:image/svg+xml;utf8,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%2314364d' stroke-width='1.5' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M21 8 12 3 3 8v8l9 5 9-5V8Z'/%3E%3Cpath d='m3 8 9 5 9-5M12 13v8'/%3E%3C/svg%3E")}
+.scard[data-ico='saat']::after,.mc[data-ico='saat']::after,.chart-card[data-ico='saat']::after{background-image:url("data:image/svg+xml;utf8,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%2314364d' stroke-width='1.5' stroke-linecap='round' stroke-linejoin='round'%3E%3Ccircle cx='12' cy='12' r='8.5'/%3E%3Cpath d='M12 6.8V12l3.6 2.1'/%3E%3C/svg%3E")}
+.scard[data-ico='pasta']::after,.mc[data-ico='pasta']::after,.chart-card[data-ico='pasta']::after{background-image:url("data:image/svg+xml;utf8,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%2314364d' stroke-width='1.5' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M12 3.5v8.5h8.5'/%3E%3Ccircle cx='12' cy='12' r='8.5'/%3E%3C/svg%3E")}
+.scard[data-ico='reklam']::after,.mc[data-ico='reklam']::after,.chart-card[data-ico='reklam']::after{background-image:url("data:image/svg+xml;utf8,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%2314364d' stroke-width='1.5' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M3.5 10.5v3a1 1 0 0 0 1 1H7l5.5 4V5.5L7 9.5H4.5a1 1 0 0 0-1 1Z'/%3E%3Cpath d='M16.5 8.8a4.2 4.2 0 0 1 0 6.4'/%3E%3C/svg%3E")}
+.scard.green::after{filter:none;opacity:.08}
+
+/* ---------- tam genislik kartlar ---------- */
+.chart-card.full{height:auto;margin-bottom:12px}
+.chart-card.full .scroll-area{overflow-y:auto;overflow-x:hidden;padding-right:7px;flex:none;max-height:190px}
+.chart-card.full .bar-row:last-child{margin-bottom:0}
+.chart-card.full .bar-row{margin-bottom:9px}
+.chart-card.full .bar-name{width:auto;flex:1;min-width:0;font-size:11.5px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.chart-card.full .bar-track{flex:0 0 300px;height:9px}
+.chart-card.full .bar-fill{height:9px}
+.chart-card.full .bar-val{width:104px;font-size:11.5px}
+.chart-card.full .bar-rank{width:20px;font-size:10.5px}
+.hourly-box{position:relative;height:300px}
+@media(max-width:900px){
+  .chart-card.full .bar-track{flex:0 0 110px}
+  .chart-card.full .bar-val{width:88px}
+  .hourly-box{height:250px}
+}
+@media(max-width:560px){
+  .chart-card.full .bar-track{display:none}
+  .chart-card.full .bar-name{font-size:11px}
+}
+
+/* ---------- karsilastirma satiri ---------- */
+.kars-not{display:flex;align-items:center;gap:10px;flex-wrap:wrap;background:#f5fafd;border:1px solid #e2eef7;
+  border-radius:11px;padding:9px 13px;margin-bottom:13px;font-size:11px;color:#4a7691}
+.kars-tag{background:var(--mavi);color:#fff;font-size:9px;font-weight:600;letter-spacing:.06em;
+  text-transform:uppercase;padding:3px 9px;border-radius:20px}
+.kars-not b{color:var(--metin);font-weight:600}
+
+/* ---------- en iyi performansli icerikler ---------- */
+.icerik-kart .icerik-liste{display:flex;flex-direction:column;gap:9px;max-height:436px;overflow-y:auto;padding-right:7px}
+.icerik-kart .icerik-liste::-webkit-scrollbar{width:4px}
+.icerik-kart .icerik-liste::-webkit-scrollbar-track{background:#f2f7fb;border-radius:3px}
+.icerik-kart .icerik-liste::-webkit-scrollbar-thumb{background:#c7dded;border-radius:3px}
+.icerik-satir{display:grid;grid-template-columns:20px 60px minmax(0,1fr) repeat(4,104px);align-items:center;gap:13px;
+  background:linear-gradient(180deg,#fafcfe,#f1f7fc);border:1px solid #e7f0f7;border-radius:12px;padding:10px 13px;transition:.16s}
+.icerik-satir:hover{border-color:#cfe3f1;box-shadow:0 4px 14px -8px rgba(18,58,88,.35)}
+.ic-rank{font-size:11px;font-weight:600;color:#a9c4d6;text-align:right}
+.ic-gorsel{width:60px;height:60px;border-radius:10px;overflow:hidden;background:#e8f1f8;border:1px solid #dbe8f2;
+  display:flex;align-items:center;justify-content:center;flex-shrink:0}
+.ic-gorsel img{width:100%;height:100%;object-fit:cover;display:block}
+.ic-yok{font-size:8.5px;color:#9bbace;text-align:center;line-height:1.35}
+.ic-metin{min-width:0}
+.ic-aciklama{font-size:11.5px;color:#3d5f76;line-height:1.45;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
+.ic-link{display:inline-block;margin-top:5px;font-size:10px;color:var(--mavi);text-decoration:none;font-weight:600}
+.ic-link:hover{text-decoration:underline}
+.ic-metrik{text-align:right;min-width:0}
+.ic-metrik span{display:block;font-size:8.5px;color:var(--metin-soluk);text-transform:uppercase;letter-spacing:.05em;margin-bottom:4px;font-weight:600}
+.ic-metrik b{font-size:13px;font-weight:600;color:var(--metin);white-space:nowrap}
+.ic-metrik.vurgu b{color:var(--yesil);font-size:14px}
+.ic-uyari{font-size:10.5px;color:#9a7b3f;background:#fdf4e3;border:1px solid #f2e2c2;border-radius:9px;padding:8px 11px;margin-bottom:11px}
+@media(max-width:1100px){
+  .icerik-satir{grid-template-columns:20px 52px minmax(0,1fr) repeat(4,82px);gap:10px}
+  .ic-gorsel{width:52px;height:52px}
+  .ic-metrik b{font-size:12px}
+}
+@media(max-width:720px){
+  .icerik-satir{grid-template-columns:34px minmax(0,1fr);grid-template-areas:"g m" "k k";row-gap:10px}
+  .ic-rank{display:none}
+  .ic-gorsel{grid-area:g;width:34px;height:34px}
+  .ic-metin{grid-area:m}
+  .ic-metrik{grid-area:k;text-align:left;display:inline-block;margin-right:18px}
+}
+
+.footer{text-align:center;padding:22px;font-size:10px;color:#9bbace;border-top:1px solid var(--cizgi);margin-top:14px}
+
+@media(max-width:900px){
+  .summary-grid{grid-template-columns:repeat(2,1fr)}
+  .charts-grid{grid-template-columns:1fr}
+  .metrics-row{grid-template-columns:repeat(3,1fr)!important}
+  .filterbar{flex-direction:column;align-items:stretch}
+  .daterange{justify-content:flex-start}
+}
+@media(max-width:560px){
+  .wrap{padding:0 14px}
+  .header{padding:20px 16px 26px}
+  .summary-grid{grid-template-columns:1fr}
+  .metrics-row{grid-template-columns:repeat(2,1fr)!important}
+  .dr-input{min-width:96px}
+}
 </style>
 </head>
 <body>
 
 <div class="header">
-  <div style="text-align:center">
-    <div class="logo-brand">RICCON</div>
-    <div class="logo-sub">Performans Raporu</div>
+  <div class="header-in">
+    <div>
+      <div class="logo-brand">RICCON</div>
+      <div class="logo-sub">Performans Raporu</div>
+    </div>
+    <div class="header-meta">
+      <div>Rapor tarihi: <b>11.09.2026</b></div>
+      <div>Veri aralığı: <b>2025-09-11 — 2026-09-10</b></div>
+    </div>
   </div>
 </div>
 
-<div class="filters">
-  <button class="fb active" onclick="showPeriod('yesterday',this)">Dün</button>
-  <button class="fb" onclick="showPeriod('last_7d',this)">Son 7 Gün</button>
-  <button class="fb" onclick="showPeriod('last_30d',this)">Son 30 Gün</button>
-  <button class="fb" onclick="showPeriod('this_month',this)">Bu Ay</button>
+<div class="wrap">
+  <div class="filterbar">
+    <div class="seg-group">
+      <span class="seg-title">Dönem</span>
+      <div class="segmented" id="segmented">
+        <button class="seg active" data-period="yesterday">Dün</button>
+        <button class="seg" data-period="last_7d">Son 7 Gün</button>
+        <button class="seg" data-period="last_30d">Son 30 Gün</button>
+        <button class="seg" data-period="this_month">Bu Ay</button>
+      </div>
+    </div>
+    <div class="daterange">
+      <span class="seg-title">Özel aralık</span>
+      <div class="dp-wrap">
+        <button class="dr-field" id="drField" type="button">
+          <svg class="dr-ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><rect x="3" y="5" width="18" height="16" rx="2.5"/><path d="M8 3v4M16 3v4M3 10h18"/></svg>
+          <span class="dr-text" id="drText">Tarih aralığı seçin</span>
+          <svg class="dr-chev" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m6 9 6 6 6-6"/></svg>
+        </button>
+        <button class="dr-clear" id="drClear" type="button" title="Temizle" hidden>
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M18 6 6 18M6 6l12 12"/></svg>
+        </button>
+
+        <div class="dp" id="dp" hidden>
+          <div class="dp-side">
+            <div class="dp-side-t">Hızlı seçim</div>
+            <button class="dp-hazir" data-h="7">Son 7 gün</button>
+            <button class="dp-hazir" data-h="14">Son 14 gün</button>
+            <button class="dp-hazir" data-h="30">Son 30 gün</button>
+            <button class="dp-hazir" data-h="90">Son 90 gün</button>
+            <button class="dp-hazir" data-h="buay">Bu ay</button>
+            <button class="dp-hazir" data-h="gecenay">Geçen ay</button>
+          </div>
+          <div class="dp-main">
+            <div class="dp-nav">
+              <button class="dp-ok" id="dpGeri" type="button"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m15 18-6-6 6-6"/></svg></button>
+              <div class="dp-baslik" id="dpBaslik"></div>
+              <button class="dp-ok" id="dpIleri" type="button"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m9 18 6-6-6-6"/></svg></button>
+            </div>
+            <div class="dp-aylar" id="dpAylar"></div>
+            <div class="dp-alt">
+              <div class="dp-secim" id="dpSecim">Başlangıç tarihini seçin</div>
+              <div class="dp-btns">
+                <button class="btn btn-ghost" id="dpVazgec" type="button">Vazgeç</button>
+                <button class="btn btn-primary" id="dpUygula" type="button" disabled>Uygula</button>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="dr-hata" id="drHata" style="display:none"></div>
+    </div>
+  </div>
+</div>
+
+<div id="period-custom" class="period-content">
+  <div class="wrap" id="customIcerik"></div>
 </div>
 
 
 <div id="period-yesterday" class="period-content active">
 <div class="wrap">
 
+  <div class="kars-not"><span class="kars-tag">Karşılaştırma</span><span><b>10.09.2026 — 10.09.2026</b> (1 gün) &nbsp;·&nbsp; önceki dönem: <b>09.09.2026 — 09.09.2026</b></span></div>
   <div class="plabel">Genel Özet</div>
   <div class="summary-grid">
-    <div class="scard">
+    <div class="scard" data-ico="harcama">
       <div class="scard-label">Toplam Harcama</div>
-      <div class="scard-value">₺14,692.58</div>
-      <div class="scard-sub neutral">—</div>
+      <div class="scard-value">₺14,697.35</div>
+      <div class="scard-sub neutral" title="Önceki dönem: ₺16.091,18">▼ %8,7</div>
     </div>
-    <div class="scard green">
+    <div class="scard green" data-ico="gelir">
       <div class="scard-label">Toplam Gelir</div>
       <div class="scard-value">₺106,892.79</div>
-      <div class="scard-sub neutral">—</div>
+      <div class="scard-sub down" title="Önceki dönem: ₺110.296,80">▼ %3,1</div>
     </div>
-    <div class="scard orange">
+    <div class="scard orange" data-ico="roas">
       <div class="scard-label">Toplam ROAS</div>
-      <div class="scard-value">7.28x</div>
-      <div class="scard-sub neutral">—</div>
+      <div class="scard-value">7.27x</div>
+      <div class="scard-sub up" title="Önceki dönem: 6,85x">▲ %6,1</div>
     </div>
-    <div class="scard purple">
+    <div class="scard purple" data-ico="siparis">
       <div class="scard-label">Toplam Sipariş</div>
       <div class="scard-value">121</div>
-      <div class="scard-sub neutral">—</div>
+      <div class="scard-sub down" title="Önceki dönem: 128">▼ %5,5</div>
     </div>
   </div>
 
   <div class="plabel">Meta Ads</div>
   <div class="platform-block">
-    <div class="pb-header"><div class="pb-name">Meta Ads</div></div>
+    <div class="pb-header"><div class="pb-icon"><img src="logos/meta-ads-logo.png" alt="Meta"></div><div class="pb-name">Meta Ads</div></div>
     <div class="metrics-row" style="grid-template-columns:repeat(6,1fr)">
-      <div class="mc"><div class="mc-label">Harcama</div><div class="mc-value">₺13,318.94</div><div class="mc-change neutral">—</div></div>
-      <div class="mc"><div class="mc-label">Alışveriş</div><div class="mc-value">95</div><div class="mc-change neutral">—</div></div>
-      <div class="mc"><div class="mc-label">ROAS</div><div class="mc-value">7.15x</div><div class="mc-change neutral">—</div></div>
-      <div class="mc"><div class="mc-label">CPC</div><div class="mc-value">₺1.77</div><div class="mc-change neutral">—</div></div>
-      <div class="mc"><div class="mc-label">CTR</div><div class="mc-value">%5.64</div><div class="mc-change neutral">—</div></div>
-      <div class="mc"><div class="mc-label">CPM</div><div class="mc-value">₺99.66</div><div class="mc-change neutral">—</div></div>
+      <div class="mc" data-ico="harcama"><div class="mc-label">Harcama</div><div class="mc-value">₺13,323.71</div><div class="mc-change neutral" title="Önceki dönem: ₺14.668,30">▼ %9,2</div></div>
+      <div class="mc" data-ico="sepet"><div class="mc-label">Alışveriş</div><div class="mc-value">95</div><div class="mc-change down" title="Önceki dönem: 101">▼ %5,9</div></div>
+      <div class="mc" data-ico="roas"><div class="mc-label">ROAS</div><div class="mc-value">7.15x</div><div class="mc-change up" title="Önceki dönem: 6,79x">▲ %5,2</div></div>
+      <div class="mc" data-ico="tiklama"><div class="mc-label">CPC</div><div class="mc-value">₺1.77</div><div class="mc-change up" title="Önceki dönem: ₺1,78">▼ %0,6</div></div>
+      <div class="mc" data-ico="oran"><div class="mc-label">CTR</div><div class="mc-value">%5.64</div><div class="mc-change down" title="Önceki dönem: %5,96">▼ %5,3</div></div>
+      <div class="mc" data-ico="gosterim"><div class="mc-label">CPM</div><div class="mc-value">₺99.65</div><div class="mc-change up" title="Önceki dönem: ₺106,14">▼ %6,1</div></div>
     </div>
   </div>
 
   <div class="plabel">Google Ads</div>
   <div class="platform-block">
-    <div class="pb-header"><div class="pb-name">Google Ads</div></div>
+    <div class="pb-header"><div class="pb-icon"><img src="logos/google-ads-logo.png" alt="Google Ads"></div><div class="pb-name">Google Ads</div></div>
     <div class="metrics-row" style="grid-template-columns:repeat(6,1fr)">
-      <div class="mc"><div class="mc-label">Harcama</div><div class="mc-value">₺1,373.64</div><div class="mc-change neutral">—</div></div>
-      <div class="mc"><div class="mc-label">Dönüşüm</div><div class="mc-value">11</div><div class="mc-change neutral">—</div></div>
-      <div class="mc"><div class="mc-label">ROAS</div><div class="mc-value">8.96x</div><div class="mc-change neutral">—</div></div>
-      <div class="mc"><div class="mc-label">TBM</div><div class="mc-value">₺3.98</div><div class="mc-change neutral">—</div></div>
-      <div class="mc"><div class="mc-label">Tıklama Oranı</div><div class="mc-value">%3.31</div><div class="mc-change neutral">—</div></div>
-      <div class="mc"><div class="mc-label">BGBM</div><div class="mc-value">₺131.9</div><div class="mc-change neutral">—</div></div>
+      <div class="mc" data-ico="harcama"><div class="mc-label">Harcama</div><div class="mc-value">₺1,373.64</div><div class="mc-change neutral" title="Önceki dönem: ₺1.422,88">▼ %3,5</div></div>
+      <div class="mc" data-ico="donusum"><div class="mc-label">Dönüşüm</div><div class="mc-value">11</div><div class="mc-change down" title="Önceki dönem: 19">▼ %42,1</div></div>
+      <div class="mc" data-ico="roas"><div class="mc-label">ROAS</div><div class="mc-value">8.96x</div><div class="mc-change down" title="Önceki dönem: 16,19x">▼ %44,7</div></div>
+      <div class="mc" data-ico="tiklama"><div class="mc-label">TBM</div><div class="mc-value">₺3.97</div><div class="mc-change down" title="Önceki dönem: ₺3,75">▲ %5,7</div></div>
+      <div class="mc" data-ico="oran"><div class="mc-label">Tıklama Oranı</div><div class="mc-value">%3.32</div><div class="mc-change down" title="Önceki dönem: %3,53">▼ %5,9</div></div>
+      <div class="mc" data-ico="gosterim"><div class="mc-label">BGBM</div><div class="mc-value">₺131.9</div><div class="mc-change up" title="Önceki dönem: ₺132,46">▼ %0,4</div></div>
     </div>
   </div>
 
   <div class="plabel">Shopify</div>
   <div class="platform-block">
-    <div class="pb-header"><div class="pb-name">Shopify</div></div>
-    <div class="metrics-row" style="grid-template-columns:repeat(5,1fr)">
-      <div class="mc"><div class="mc-label">Gelir</div><div class="mc-value">₺106,892.79</div><div class="mc-change neutral">—</div></div>
-      <div class="mc"><div class="mc-label">Toplam ROAS</div><div class="mc-value">7.28x</div><div class="mc-change neutral">—</div></div>
-      <div class="mc"><div class="mc-label">Ort. Sepet</div><div class="mc-value">₺883.41</div><div class="mc-change neutral">—</div></div>
-      <div class="mc"><div class="mc-label">Sipariş</div><div class="mc-value">121</div><div class="mc-change neutral">—</div></div>
+    <div class="pb-header"><div class="pb-icon"><img src="logos/shopify-logo.png" alt="Shopify"></div><div class="pb-name">Shopify</div></div>
+    <div class="metrics-row" style="grid-template-columns:repeat(4,1fr)">
+      <div class="mc" data-ico="gelir"><div class="mc-label">Gelir</div><div class="mc-value">₺106,892.79</div><div class="mc-change down" title="Önceki dönem: ₺110.296,80">▼ %3,1</div></div>
+      <div class="mc" data-ico="roas"><div class="mc-label">Toplam ROAS</div><div class="mc-value">7.27x</div><div class="mc-change up" title="Önceki dönem: 6,85x">▲ %6,1</div></div>
+      <div class="mc" data-ico="sepet"><div class="mc-label">Ort. Sepet</div><div class="mc-value">₺883.41</div><div class="mc-change up" title="Önceki dönem: ₺861,69">▲ %2,5</div></div>
+      <div class="mc" data-ico="siparis"><div class="mc-label">Sipariş</div><div class="mc-value">121</div><div class="mc-change down" title="Önceki dönem: 128">▼ %5,5</div></div>
 
     </div>
   </div>
 
   <div class="plabel">Analizler</div>
 
-  <div class="charts-grid">
-    <div style="background:white;border-radius:10px;border:0.5px solid #cce0ee;padding:14px 16px;height:320px;display:flex;flex-direction:column;">
-      <div class="cc-title"><span>En çok satan ürünler</span><span class="cc-count">20 ürün</span></div>
-      <div class="scroll-area"><div class="bar-row"><div class="bar-rank">1</div><div class="bar-name">Riccon Meshronei Kadın Sneaker 0012601 Beyaz</div><div class="bar-track"><div class="bar-fill" style="width:100%;background:#2c77a3"></div></div><div class="bar-val">₺3,524.40</div></div><div class="bar-row"><div class="bar-rank">2</div><div class="bar-name">Riccon Qhedalvi Erkek Sneaker 0012404 Siyah Siyah</div><div class="bar-track"><div class="bar-fill" style="width:85%;background:#2c77a3"></div></div><div class="bar-val">₺2,997.00</div></div><div class="bar-row"><div class="bar-rank">3</div><div class="bar-name">Riccon Qhedalvi Erkek Sneaker 0012404 Siyah Beyaz</div><div class="bar-track"><div class="bar-fill" style="width:85%;background:#3a8fc4"></div></div><div class="bar-val">₺2,997.00</div></div><div class="bar-row"><div class="bar-rank">4</div><div class="bar-name">Riccon Rosatora Kadın Sneaker 001210 Bej Taba</div><div class="bar-track"><div class="bar-fill" style="width:80%;background:#3a8fc4"></div></div><div class="bar-val">₺2,811.60</div></div><div class="bar-row"><div class="bar-rank">5</div><div class="bar-name">Riccon Kadın Sneaker 0012255 Beyaz Beyaz</div><div class="bar-track"><div class="bar-fill" style="width:68%;background:#4a9cc4"></div></div><div class="bar-val">₺2,396.00</div></div><div class="bar-row"><div class="bar-rank">6</div><div class="bar-name">Riccon Syagroth Kadın Loafer 0012506 Siyah Süet</div><div class="bar-track"><div class="bar-fill" style="width:58%;background:#4a9cc4"></div></div><div class="bar-val">₺2,059.20</div></div><div class="bar-row"><div class="bar-rank">7</div><div class="bar-name">Riccon Qhedalvi Erkek Sneaker 0012404 Beyaz</div><div class="bar-track"><div class="bar-fill" style="width:57%;background:#5aaad4"></div></div><div class="bar-val">₺1,998.00</div></div><div class="bar-row"><div class="bar-rank">8</div><div class="bar-name">Riccon Heshrari Kadın Bot 0012072 Siyah Cilt</div><div class="bar-track"><div class="bar-fill" style="width:54%;background:#5aaad4"></div></div><div class="bar-val">₺1,918.40</div></div><div class="bar-row"><div class="bar-rank">9</div><div class="bar-name">Riccon Saelheira Kadın Babet 0012250 Siyah Cilt</div><div class="bar-track"><div class="bar-fill" style="width:50%;background:#6ab8d8"></div></div><div class="bar-val">₺1,770.00</div></div><div class="bar-row"><div class="bar-rank">10</div><div class="bar-name">Riccon Siri Mia Kadın Ortopedik Babet 0012620 Bej</div><div class="bar-track"><div class="bar-fill" style="width:50%;background:#6ab8d8"></div></div><div class="bar-val">₺1,762.20</div></div><div class="bar-row"><div class="bar-rank">11</div><div class="bar-name">Riccon Unisex Sneaker 0012072 Siyah</div><div class="bar-track"><div class="bar-fill" style="width:45%;background:#7ac6dc"></div></div><div class="bar-val">₺1,598.00</div></div><div class="bar-row"><div class="bar-rank">12</div><div class="bar-name">Riccon Loralenyth Kadın Çizme 00122004 Siyah Rustik</div><div class="bar-track"><div class="bar-fill" style="width:45%;background:#7ac6dc"></div></div><div class="bar-val">₺1,597.20</div></div><div class="bar-row"><div class="bar-rank">13</div><div class="bar-name">Riccon Kadın Sneaker 0012140 Bej Vizon</div><div class="bar-track"><div class="bar-fill" style="width:45%;background:#8acfe0"></div></div><div class="bar-val">₺1,578.00</div></div><div class="bar-row"><div class="bar-rank">14</div><div class="bar-name">Riccon Rosatora Kadın Sneaker 001210 Buz Somon</div><div class="bar-track"><div class="bar-fill" style="width:40%;background:#8acfe0"></div></div><div class="bar-val">₺1,405.80</div></div><div class="bar-row"><div class="bar-rank">15</div><div class="bar-name">Riccon Elysthara Kadın Sandalet 00129021 Siyah</div><div class="bar-track"><div class="bar-fill" style="width:40%;background:#9ad8e4"></div></div><div class="bar-val">₺1,400.00</div></div><div class="bar-row"><div class="bar-rank">16</div><div class="bar-name">Riccon Kadın İnce Topuklu Ayakkabı 001264 Siyah Rustik</div><div class="bar-track"><div class="bar-fill" style="width:36%;background:#9ad8e4"></div></div><div class="bar-val">₺1,281.60</div></div><div class="bar-row"><div class="bar-rank">17</div><div class="bar-name">Riccon Kadın Sivri Burunlu Arkası Açık İnce Topuklu Ayakkabı 0012200 Sarı Rugan</div><div class="bar-track"><div class="bar-fill" style="width:36%;background:#aae0e8"></div></div><div class="bar-val">₺1,273.80</div></div><div class="bar-row"><div class="bar-rank">18</div><div class="bar-name">Riccon Kadın Sivri Burunlu Arkası Açık İnce Topuklu Ayakkabı 0012200 Siyah</div><div class="bar-track"><div class="bar-fill" style="width:36%;background:#aae0e8"></div></div><div class="bar-val">₺1,273.80</div></div><div class="bar-row"><div class="bar-rank">19</div><div class="bar-name">Riccon Niknaith Unisex Sneaker 0012725 Siyah Füme</div><div class="bar-track"><div class="bar-fill" style="width:36%;background:#bae8ec"></div></div><div class="bar-val">₺1,259.98</div></div><div class="bar-row"><div class="bar-rank">20</div><div class="bar-name">Riccon Kadın İnce Topuklu Ayakkabı 001254 Siyah Rustik</div><div class="bar-track"><div class="bar-fill" style="width:35%;background:#bae8ec"></div></div><div class="bar-val">₺1,221.60</div></div></div>
-    </div>
-    <div style="background:white;border-radius:10px;border:0.5px solid #cce0ee;padding:14px 16px;height:320px;display:flex;flex-direction:column;">
-      <div class="cc-title"><span>Saatlik sipariş dağılımı</span></div>
-      <div style="flex:1;min-height:0;position:relative;">
-        <canvas id="hourly_chart_yesterday" style="max-height:240px;"></canvas>
-      </div>
-    </div>
+  <div class="chart-card full" data-ico="urun">
+    <div class="cc-title"><span>En çok satan ürünler</span><span class="cc-count">20 ürün</span></div>
+    <div class="scroll-area"><div class="bar-row"><div class="bar-rank">1</div><div class="bar-name" title="Riccon Meshronei Kadın Sneaker 0012601 Beyaz">Riccon Meshronei Kadın Sneaker 0012601 Beyaz</div><div class="bar-track"><div class="bar-fill" style="width:100%;background:#2c77a3"></div></div><div class="bar-val">₺3,524.40</div></div><div class="bar-row"><div class="bar-rank">2</div><div class="bar-name" title="Riccon Qhedalvi Erkek Sneaker 0012404 Siyah Siyah">Riccon Qhedalvi Erkek Sneaker 0012404 Siyah Siyah</div><div class="bar-track"><div class="bar-fill" style="width:85%;background:#2c77a3"></div></div><div class="bar-val">₺2,997.00</div></div><div class="bar-row"><div class="bar-rank">3</div><div class="bar-name" title="Riccon Qhedalvi Erkek Sneaker 0012404 Siyah Beyaz">Riccon Qhedalvi Erkek Sneaker 0012404 Siyah Beyaz</div><div class="bar-track"><div class="bar-fill" style="width:85%;background:#3a8fc4"></div></div><div class="bar-val">₺2,997.00</div></div><div class="bar-row"><div class="bar-rank">4</div><div class="bar-name" title="Riccon Rosatora Kadın Sneaker 001210 Bej Taba">Riccon Rosatora Kadın Sneaker 001210 Bej Taba</div><div class="bar-track"><div class="bar-fill" style="width:80%;background:#3a8fc4"></div></div><div class="bar-val">₺2,811.60</div></div><div class="bar-row"><div class="bar-rank">5</div><div class="bar-name" title="Riccon Kadın Sneaker 0012255 Beyaz Beyaz">Riccon Kadın Sneaker 0012255 Beyaz Beyaz</div><div class="bar-track"><div class="bar-fill" style="width:68%;background:#4a9cc4"></div></div><div class="bar-val">₺2,396.00</div></div><div class="bar-row"><div class="bar-rank">6</div><div class="bar-name" title="Riccon Syagroth Kadın Loafer 0012506 Siyah Süet">Riccon Syagroth Kadın Loafer 0012506 Siyah Süet</div><div class="bar-track"><div class="bar-fill" style="width:58%;background:#4a9cc4"></div></div><div class="bar-val">₺2,059.20</div></div><div class="bar-row"><div class="bar-rank">7</div><div class="bar-name" title="Riccon Qhedalvi Erkek Sneaker 0012404 Beyaz">Riccon Qhedalvi Erkek Sneaker 0012404 Beyaz</div><div class="bar-track"><div class="bar-fill" style="width:57%;background:#5aaad4"></div></div><div class="bar-val">₺1,998.00</div></div><div class="bar-row"><div class="bar-rank">8</div><div class="bar-name" title="Riccon Heshrari Kadın Bot 0012072 Siyah Cilt">Riccon Heshrari Kadın Bot 0012072 Siyah Cilt</div><div class="bar-track"><div class="bar-fill" style="width:54%;background:#5aaad4"></div></div><div class="bar-val">₺1,918.40</div></div><div class="bar-row"><div class="bar-rank">9</div><div class="bar-name" title="Riccon Saelheira Kadın Babet 0012250 Siyah Cilt">Riccon Saelheira Kadın Babet 0012250 Siyah Cilt</div><div class="bar-track"><div class="bar-fill" style="width:50%;background:#6ab8d8"></div></div><div class="bar-val">₺1,770.00</div></div><div class="bar-row"><div class="bar-rank">10</div><div class="bar-name" title="Riccon Siri Mia Kadın Ortopedik Babet 0012620 Bej">Riccon Siri Mia Kadın Ortopedik Babet 0012620 Bej</div><div class="bar-track"><div class="bar-fill" style="width:50%;background:#6ab8d8"></div></div><div class="bar-val">₺1,762.20</div></div><div class="bar-row"><div class="bar-rank">11</div><div class="bar-name" title="Riccon Unisex Sneaker 0012072 Siyah">Riccon Unisex Sneaker 0012072 Siyah</div><div class="bar-track"><div class="bar-fill" style="width:45%;background:#7ac6dc"></div></div><div class="bar-val">₺1,598.00</div></div><div class="bar-row"><div class="bar-rank">12</div><div class="bar-name" title="Riccon Loralenyth Kadın Çizme 00122004 Siyah Rustik">Riccon Loralenyth Kadın Çizme 00122004 Siyah Rustik</div><div class="bar-track"><div class="bar-fill" style="width:45%;background:#7ac6dc"></div></div><div class="bar-val">₺1,597.20</div></div><div class="bar-row"><div class="bar-rank">13</div><div class="bar-name" title="Riccon Kadın Sneaker 0012140 Bej Vizon">Riccon Kadın Sneaker 0012140 Bej Vizon</div><div class="bar-track"><div class="bar-fill" style="width:45%;background:#8acfe0"></div></div><div class="bar-val">₺1,578.00</div></div><div class="bar-row"><div class="bar-rank">14</div><div class="bar-name" title="Riccon Rosatora Kadın Sneaker 001210 Buz Somon">Riccon Rosatora Kadın Sneaker 001210 Buz Somon</div><div class="bar-track"><div class="bar-fill" style="width:40%;background:#8acfe0"></div></div><div class="bar-val">₺1,405.80</div></div><div class="bar-row"><div class="bar-rank">15</div><div class="bar-name" title="Riccon Elysthara Kadın Sandalet 00129021 Siyah">Riccon Elysthara Kadın Sandalet 00129021 Siyah</div><div class="bar-track"><div class="bar-fill" style="width:40%;background:#9ad8e4"></div></div><div class="bar-val">₺1,400.00</div></div><div class="bar-row"><div class="bar-rank">16</div><div class="bar-name" title="Riccon Kadın İnce Topuklu Ayakkabı 001264 Siyah Rustik">Riccon Kadın İnce Topuklu Ayakkabı 001264 Siyah Rustik</div><div class="bar-track"><div class="bar-fill" style="width:36%;background:#9ad8e4"></div></div><div class="bar-val">₺1,281.60</div></div><div class="bar-row"><div class="bar-rank">17</div><div class="bar-name" title="Riccon Kadın Sivri Burunlu Arkası Açık İnce Topuklu Ayakkabı 0012200 Sarı Rugan">Riccon Kadın Sivri Burunlu Arkası Açık İnce Topuklu Ayakkabı 0012200 Sarı Rugan</div><div class="bar-track"><div class="bar-fill" style="width:36%;background:#aae0e8"></div></div><div class="bar-val">₺1,273.80</div></div><div class="bar-row"><div class="bar-rank">18</div><div class="bar-name" title="Riccon Kadın Sivri Burunlu Arkası Açık İnce Topuklu Ayakkabı 0012200 Siyah">Riccon Kadın Sivri Burunlu Arkası Açık İnce Topuklu Ayakkabı 0012200 Siyah</div><div class="bar-track"><div class="bar-fill" style="width:36%;background:#aae0e8"></div></div><div class="bar-val">₺1,273.80</div></div><div class="bar-row"><div class="bar-rank">19</div><div class="bar-name" title="Riccon Niknaith Unisex Sneaker 0012725 Siyah Füme">Riccon Niknaith Unisex Sneaker 0012725 Siyah Füme</div><div class="bar-track"><div class="bar-fill" style="width:36%;background:#bae8ec"></div></div><div class="bar-val">₺1,259.98</div></div><div class="bar-row"><div class="bar-rank">20</div><div class="bar-name" title="Riccon Kadın İnce Topuklu Ayakkabı 001254 Siyah Rustik">Riccon Kadın İnce Topuklu Ayakkabı 001254 Siyah Rustik</div><div class="bar-track"><div class="bar-fill" style="width:35%;background:#bae8ec"></div></div><div class="bar-val">₺1,221.60</div></div></div>
   </div>
 
-  <div class="charts-grid">
-    <div style="background:white;border-radius:10px;border:0.5px solid #cce0ee;padding:14px 16px;height:320px;display:flex;flex-direction:column;">
-      <div class="cc-title"><span>Platform harcama dağılımı</span></div>
-      <div class="pie-wrap">
-        <canvas id="pie_spend_yesterday" width="180" height="180"></canvas>
-      </div>
-      <div class="pie-legend">
-        <div style="display:flex;align-items:center;gap:5px"><div class="pie-dot" style="background:#1877f2"></div><div class="pie-label">Meta · ₺13,318.94</div></div>
-        <div style="display:flex;align-items:center;gap:5px"><div class="pie-dot" style="background:#ea4335"></div><div class="pie-label">Google · ₺1,373.64</div></div>
-      </div>
-    </div>
-    <div style="background:white;border-radius:10px;border:0.5px solid #cce0ee;padding:14px 16px;height:320px;display:flex;flex-direction:column;">
-      <div class="cc-title"><span>Platform dönüşüm geliri dağılımı</span></div>
-      <div class="pie-wrap">
-        <canvas id="pie_roas_yesterday" width="180" height="180"></canvas>
-      </div>
-      <div class="pie-legend">
-        <div style="display:flex;align-items:center;gap:5px"><div class="pie-dot" style="background:#1877f2"></div><div class="pie-label">Meta · ₺95,220.44</div></div>
-        <div style="display:flex;align-items:center;gap:5px"><div class="pie-dot" style="background:#ea4335"></div><div class="pie-label">Google · ₺12,308.45</div></div>
-      </div>
-    </div>
+  <div class="chart-card full" data-ico="saat">
+    <div class="cc-title"><span>Saatlik sipariş dağılımı</span></div>
+    <div class="hourly-box"><canvas id="hourly_chart_yesterday"></canvas></div>
   </div>
 
-  <div class="charts-grid">
-    <div style="background:white;border-radius:10px;border:0.5px solid #cce0ee;padding:14px 16px;height:320px;display:flex;flex-direction:column;">
-      <div class="cc-title"><span>Meta — En yüksek ROAS'lı reklamlar</span></div>
-      <div class="scroll-area" id="meta_ads_yesterday"></div>
-    </div>
-    <div style="background:white;border-radius:10px;border:0.5px solid #cce0ee;padding:14px 16px;height:320px;display:flex;flex-direction:column;">
-      <div class="cc-title"><span>Google — En yüksek ROAS'lı reklamlar</span></div>
-      <div class="scroll-area" id="google_ads_yesterday"></div>
-    </div>
+    <div class="plabel">Meta Ads — En iyi performanslı içerikler</div>
+  <div class="chart-card full icerik-kart" data-ico="reklam">
+    <div class="cc-title"><span>En iyi performanslı içerikler</span><span class="cc-count">10 gönderi · ROAS'a göre sıralı</span></div>
+    
+    <div class="icerik-liste"><div class="icerik-satir"><div class="ic-rank">1</div><div class="ic-gorsel"><img src="icerik/26247781481540357.jpg" alt="" loading="lazy"></div><div class="ic-metin"><div class="ic-aciklama" title="Modern &amp; Estetik !
+
+Iarwarin Kadın Kısa Topuklu Ayakkabı
+
+⚡️ 2. Üründe %25 EK İndirim
+📦 Ücretsiz Kargo
+💳 Peşin Fiyatına 3 Taksit">Modern &amp; Estetik !
+
+Iarwarin Kadın Kısa Topuklu Ayakkabı
+
+⚡️ 2. Üründe %25 EK İndirim
+📦 Ücretsiz Kargo
+💳 Peşin Fiyatına 3 Taksit</div><a class="ic-link" href="https://www.instagram.com/p/DWV744CjKcc/" target="_blank" rel="noopener">Instagram'da aç ↗</a></div><div class="ic-metrik"><span>Harcama</span><b>₺687,41</b></div><div class="ic-metrik"><span>Gelir</span><b>₺12.198,77</b></div><div class="ic-metrik vurgu"><span>ROAS</span><b>17,75x</b></div><div class="ic-metrik"><span>Tıklama Oranı</span><b>%4,46</b></div></div><div class="icerik-satir"><div class="ic-rank">2</div><div class="ic-gorsel"><img src="icerik/2052444492285698.jpg" alt="" loading="lazy"></div><div class="ic-metin"><div class="ic-aciklama" title="Yeni sezonda trendler dolabında  💫
+En iyi fiyat avantajı ❤️">Yeni sezonda trendler dolabında  💫
+En iyi fiyat avantajı ❤️</div></div><div class="ic-metrik"><span>Harcama</span><b>₺973,11</b></div><div class="ic-metrik"><span>Gelir</span><b>₺10.830,56</b></div><div class="ic-metrik vurgu"><span>ROAS</span><b>11,13x</b></div><div class="ic-metrik"><span>Tıklama Oranı</span><b>%8,11</b></div></div><div class="icerik-satir"><div class="ic-rank">3</div><div class="ic-gorsel"><img src="icerik/1445242377151491.jpg" alt="" loading="lazy"></div><div class="ic-metin"><div class="ic-aciklama" title="Gün Boyu Konfor!
+
+Qhedalvi Erkek Sneaker
+
+⚡️ 2. Üründe %25 EK İndirim
+📦 Ücretsiz Kargo
+💳 Peşin Fiyatına 3 Taksit">Gün Boyu Konfor!
+
+Qhedalvi Erkek Sneaker
+
+⚡️ 2. Üründe %25 EK İndirim
+📦 Ücretsiz Kargo
+💳 Peşin Fiyatına 3 Taksit</div><a class="ic-link" href="https://www.instagram.com/p/DU0I1P1DL5t/" target="_blank" rel="noopener">Instagram'da aç ↗</a></div><div class="ic-metrik"><span>Harcama</span><b>₺517,94</b></div><div class="ic-metrik"><span>Gelir</span><b>₺4.769,50</b></div><div class="ic-metrik vurgu"><span>ROAS</span><b>9,21x</b></div><div class="ic-metrik"><span>Tıklama Oranı</span><b>%2,24</b></div></div><div class="icerik-satir"><div class="ic-rank">4</div><div class="ic-gorsel"><img src="icerik/1720500852150771.jpg" alt="" loading="lazy"></div><div class="ic-metin"><div class="ic-aciklama" title="Yeni Sezon, Yeni Fırsatlar 🫶🏻
+⭐️ Net %40 İndirim
+⚡️ 2. Üründe %25 EK İndirim
+📦 Ücretsiz Kargo
+💳 Peşin Fiyatına 3 Taksit
+💫 Yeni Üyelere Özel %10 İndirim">Yeni Sezon, Yeni Fırsatlar 🫶🏻
+⭐️ Net %40 İndirim
+⚡️ 2. Üründe %25 EK İndirim
+📦 Ücretsiz Kargo
+💳 Peşin Fiyatına 3 Taksit
+💫 Yeni Üyelere Özel %10 İndirim</div></div><div class="ic-metrik"><span>Harcama</span><b>₺1.466,66</b></div><div class="ic-metrik"><span>Gelir</span><b>₺11.187,68</b></div><div class="ic-metrik vurgu"><span>ROAS</span><b>7,63x</b></div><div class="ic-metrik"><span>Tıklama Oranı</span><b>%5,10</b></div></div><div class="icerik-satir"><div class="ic-rank">5</div><div class="ic-gorsel"><img src="icerik/2104419353368452.jpg" alt="" loading="lazy"></div><div class="ic-metin"><div class="ic-aciklama" title="Riccon’da Seni Bekleyen İndirimler Var ⚡️
+Sepetindeki Ürünleri Unutma 😉
+www.riccon.com.tr">Riccon’da Seni Bekleyen İndirimler Var ⚡️
+Sepetindeki Ürünleri Unutma 😉
+www.riccon.com.tr</div></div><div class="ic-metrik"><span>Harcama</span><b>₺675,97</b></div><div class="ic-metrik"><span>Gelir</span><b>₺5.142,43</b></div><div class="ic-metrik vurgu"><span>ROAS</span><b>7,61x</b></div><div class="ic-metrik"><span>Tıklama Oranı</span><b>%6,72</b></div></div><div class="icerik-satir"><div class="ic-rank">6</div><div class="ic-gorsel"><img src="icerik/3966784133562573.jpg" alt="" loading="lazy"></div><div class="ic-metin"><div class="ic-aciklama" title="Riccon’da Seni Bekleyen İndirimler Var ⚡️
+Sepetindeki Ürünleri Unutma 😉
+www.riccon.com.tr">Riccon’da Seni Bekleyen İndirimler Var ⚡️
+Sepetindeki Ürünleri Unutma 😉
+www.riccon.com.tr</div></div><div class="ic-metrik"><span>Harcama</span><b>₺710,59</b></div><div class="ic-metrik"><span>Gelir</span><b>₺5.235,76</b></div><div class="ic-metrik vurgu"><span>ROAS</span><b>7,37x</b></div><div class="ic-metrik"><span>Tıklama Oranı</span><b>%5,95</b></div></div><div class="icerik-satir"><div class="ic-rank">7</div><div class="ic-gorsel"><img src="icerik/669569412154163.jpg" alt="" loading="lazy"></div><div class="ic-metin"><div class="ic-aciklama" title="Simsiyah🖤 Sezon Sonuna Özel 449TL 💎
+
+Ürün Kodu: 0012124 Mat Siyah
+
+⚡️ 2. Üründe %25 EK İndirim
+📦 Ücretsiz Kargo
+💳 Peşin Fiyatına 3 Taksit">Simsiyah🖤 Sezon Sonuna Özel 449TL 💎
+
+Ürün Kodu: 0012124 Mat Siyah
+
+⚡️ 2. Üründe %25 EK İndirim
+📦 Ücretsiz Kargo
+💳 Peşin Fiyatına 3 Taksit</div><a class="ic-link" href="https://www.instagram.com/p/DIdXQQpMuqU/" target="_blank" rel="noopener">Instagram'da aç ↗</a></div><div class="ic-metrik"><span>Harcama</span><b>₺894,22</b></div><div class="ic-metrik"><span>Gelir</span><b>₺3.780,25</b></div><div class="ic-metrik vurgu"><span>ROAS</span><b>4,23x</b></div><div class="ic-metrik"><span>Tıklama Oranı</span><b>%4,64</b></div></div><div class="icerik-satir"><div class="ic-rank">8</div><div class="ic-gorsel"><img src="icerik/1316776153227908.jpg" alt="" loading="lazy"></div><div class="ic-metin"><div class="ic-aciklama" title="Sepetinde Unuttuğun Ürünlere Özel 🙃
+Tüm İndirimlere EK 100TL İndirim Fırsatı
+İndirim Kodu: RC100 
+
+⭐️ Net %40 İndirim
+⚡️ 2. Üründe %25 EK İndirim
+📦 Ücretsiz Kargo
+💳 Peşin Fiyatına 3 Taksit
+
+&#x27;1000TL ve Üzeri Alışverişlerde Geçerlidir&#x27; ❤️">Sepetinde Unuttuğun Ürünlere Özel 🙃
+Tüm İndirimlere EK 100TL İndirim Fırsatı
+İndirim Kodu: RC100 
+
+⭐️ Net %40 İndirim
+⚡️ 2. Üründe %25 EK İndirim
+📦 Ücretsiz Kargo
+💳 Peşin Fiyatına 3 Taksit
+
+&#x27;1000TL ve Üzeri Alışverişlerde Geçerlidir&#x27; ❤️</div><a class="ic-link" href="https://www.instagram.com/p/DdEQCi7Mh4Z/" target="_blank" rel="noopener">Instagram'da aç ↗</a></div><div class="ic-metrik"><span>Harcama</span><b>₺1.022,48</b></div><div class="ic-metrik"><span>Gelir</span><b>₺4.266,90</b></div><div class="ic-metrik vurgu"><span>ROAS</span><b>4,17x</b></div><div class="ic-metrik"><span>Tıklama Oranı</span><b>%4,68</b></div></div><div class="icerik-satir"><div class="ic-rank">9</div><div class="ic-gorsel"><img src="icerik/9647215438712453.jpg" alt="" loading="lazy"></div><div class="ic-metin"><div class="ic-aciklama" title="Rahatlığın Ötesinde👟🤍
+
+Ürün Kodu: 0012404Beyaz
+
+⚡️ 2. Üründe %25 EK İndirim
+📦 Ücretsiz Kargo
+💳 Peşin Fiyatına 3 Taksit">Rahatlığın Ötesinde👟🤍
+
+Ürün Kodu: 0012404Beyaz
+
+⚡️ 2. Üründe %25 EK İndirim
+📦 Ücretsiz Kargo
+💳 Peşin Fiyatına 3 Taksit</div><a class="ic-link" href="https://www.instagram.com/p/DGvBPlKM58u/" target="_blank" rel="noopener">Instagram'da aç ↗</a></div><div class="ic-metrik"><span>Harcama</span><b>₺746,24</b></div><div class="ic-metrik"><span>Gelir</span><b>₺2.191,49</b></div><div class="ic-metrik vurgu"><span>ROAS</span><b>2,94x</b></div><div class="ic-metrik"><span>Tıklama Oranı</span><b>%4,26</b></div></div><div class="icerik-satir"><div class="ic-rank">10</div><div class="ic-gorsel"><img src="icerik/1168296545323814.jpg" alt="" loading="lazy"></div><div class="ic-metin"><div class="ic-aciklama" title="En Sevilenlerde Efsane Fiyatlar!
+⚡️ 2. Üründe %25 EK İndirim
+📦 Ücretsiz Kargo
+💳 Peşin Fiyatına 3 Taksit">En Sevilenlerde Efsane Fiyatlar!
+⚡️ 2. Üründe %25 EK İndirim
+📦 Ücretsiz Kargo
+💳 Peşin Fiyatına 3 Taksit</div></div><div class="ic-metrik"><span>Harcama</span><b>₺956,59</b></div><div class="ic-metrik"><span>Gelir</span><b>₺647,40</b></div><div class="ic-metrik vurgu"><span>ROAS</span><b>0,68x</b></div><div class="ic-metrik"><span>Tıklama Oranı</span><b>%4,09</b></div></div></div>
   </div>
 
 </div>
@@ -198,8 +523,8 @@ body{background:#f0f6fb;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',
 <script>
 (function(){
   var labels = ['00:00', '01:00', '02:00', '03:00', '04:00', '05:00', '06:00', '07:00', '08:00', '09:00', '10:00', '11:00', '12:00', '13:00', '14:00', '15:00', '16:00', '17:00', '18:00', '19:00', '20:00', '21:00', '22:00', '23:00'];
-  var counts = [9, 6, 5, 6, 4, 0, 3, 0, 3, 1, 0, 4, 2, 10, 7, 9, 9, 9, 7, 5, 8, 6, 3, 5];
-  var revenues = [9594.61, 5496.14, 3438.0, 5814.79, 3347.09, 0.0, 2331.0, 0.0, 2798.7, 639.99, 0.0, 3262.0, 1702.41, 10253.0, 4911.1, 7575.06, 8236.22, 7213.08, 5990.25, 4672.98, 6972.05, 5936.09, 2164.1, 4544.13];
+  var counts = [6, 4, 0, 3, 0, 3, 1, 0, 4, 2, 10, 7, 9, 9, 9, 7, 5, 8, 6, 3, 5, 9, 6, 5];
+  var revenues = [5814.79, 3347.09, 0.0, 2331.0, 0.0, 2798.7, 639.99, 0.0, 3262.0, 1702.41, 10253.0, 4911.1, 7575.06, 8236.22, 7213.08, 5990.25, 4672.98, 6972.05, 5936.09, 2164.1, 4544.13, 9594.61, 5496.14, 3438.0];
   window.addEventListener('load', function(){
     var ctx = document.getElementById('hourly_chart_yesterday');
     if(!ctx) return;
@@ -245,115 +570,178 @@ body{background:#f0f6fb;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',
 <div id="period-last_7d" class="period-content ">
 <div class="wrap">
 
+  <div class="kars-not"><span class="kars-tag">Karşılaştırma</span><span><b>04.09.2026 — 10.09.2026</b> (7 gün) &nbsp;·&nbsp; önceki dönem: <b>28.08.2026 — 03.09.2026</b></span></div>
   <div class="plabel">Genel Özet</div>
   <div class="summary-grid">
-    <div class="scard">
+    <div class="scard" data-ico="harcama">
       <div class="scard-label">Toplam Harcama</div>
-      <div class="scard-value">₺115,034.26</div>
-      <div class="scard-sub neutral">—</div>
+      <div class="scard-value">₺115,039.02</div>
+      <div class="scard-sub neutral" title="Önceki dönem: ₺110.479,94">▲ %4,1</div>
     </div>
-    <div class="scard green">
+    <div class="scard green" data-ico="gelir">
       <div class="scard-label">Toplam Gelir</div>
       <div class="scard-value">₺743,074.95</div>
-      <div class="scard-sub neutral">—</div>
+      <div class="scard-sub down" title="Önceki dönem: ₺744.263,93">▼ %0,2</div>
     </div>
-    <div class="scard orange">
+    <div class="scard orange" data-ico="roas">
       <div class="scard-label">Toplam ROAS</div>
       <div class="scard-value">6.46x</div>
-      <div class="scard-sub neutral">—</div>
+      <div class="scard-sub down" title="Önceki dönem: 6,74x">▼ %4,1</div>
     </div>
-    <div class="scard purple">
+    <div class="scard purple" data-ico="siparis">
       <div class="scard-label">Toplam Sipariş</div>
       <div class="scard-value">842</div>
-      <div class="scard-sub neutral">—</div>
+      <div class="scard-sub down" title="Önceki dönem: 861">▼ %2,2</div>
     </div>
   </div>
 
   <div class="plabel">Meta Ads</div>
   <div class="platform-block">
-    <div class="pb-header"><div class="pb-name">Meta Ads</div></div>
+    <div class="pb-header"><div class="pb-icon"><img src="logos/meta-ads-logo.png" alt="Meta"></div><div class="pb-name">Meta Ads</div></div>
     <div class="metrics-row" style="grid-template-columns:repeat(6,1fr)">
-      <div class="mc"><div class="mc-label">Harcama</div><div class="mc-value">₺105,297.59</div><div class="mc-change neutral">—</div></div>
-      <div class="mc"><div class="mc-label">Alışveriş</div><div class="mc-value">695</div><div class="mc-change neutral">—</div></div>
-      <div class="mc"><div class="mc-label">ROAS</div><div class="mc-value">6.56x</div><div class="mc-change neutral">—</div></div>
-      <div class="mc"><div class="mc-label">CPC</div><div class="mc-value">₺1.77</div><div class="mc-change neutral">—</div></div>
-      <div class="mc"><div class="mc-label">CTR</div><div class="mc-value">%5.52</div><div class="mc-change neutral">—</div></div>
-      <div class="mc"><div class="mc-label">CPM</div><div class="mc-value">₺97.61</div><div class="mc-change neutral">—</div></div>
+      <div class="mc" data-ico="harcama"><div class="mc-label">Harcama</div><div class="mc-value">₺105,302.36</div><div class="mc-change neutral" title="Önceki dönem: ₺101.887,31">▲ %3,4</div></div>
+      <div class="mc" data-ico="sepet"><div class="mc-label">Alışveriş</div><div class="mc-value">695</div><div class="mc-change up" title="Önceki dönem: 691">▲ %0,6</div></div>
+      <div class="mc" data-ico="roas"><div class="mc-label">ROAS</div><div class="mc-value">6.56x</div><div class="mc-change down" title="Önceki dönem: 6,65x">▼ %1,4</div></div>
+      <div class="mc" data-ico="tiklama"><div class="mc-label">CPC</div><div class="mc-value">₺1.77</div><div class="mc-change down" title="Önceki dönem: ₺1,54">▲ %14,6</div></div>
+      <div class="mc" data-ico="oran"><div class="mc-label">CTR</div><div class="mc-value">%5.52</div><div class="mc-change down" title="Önceki dönem: %5,85">▼ %5,6</div></div>
+      <div class="mc" data-ico="gosterim"><div class="mc-label">CPM</div><div class="mc-value">₺97.61</div><div class="mc-change down" title="Önceki dönem: ₺90,37">▲ %8,0</div></div>
     </div>
   </div>
 
   <div class="plabel">Google Ads</div>
   <div class="platform-block">
-    <div class="pb-header"><div class="pb-name">Google Ads</div></div>
+    <div class="pb-header"><div class="pb-icon"><img src="logos/google-ads-logo.png" alt="Google Ads"></div><div class="pb-name">Google Ads</div></div>
     <div class="metrics-row" style="grid-template-columns:repeat(6,1fr)">
-      <div class="mc"><div class="mc-label">Harcama</div><div class="mc-value">₺9,736.67</div><div class="mc-change neutral">—</div></div>
-      <div class="mc"><div class="mc-label">Dönüşüm</div><div class="mc-value">119</div><div class="mc-change neutral">—</div></div>
-      <div class="mc"><div class="mc-label">ROAS</div><div class="mc-value">15.65x</div><div class="mc-change neutral">—</div></div>
-      <div class="mc"><div class="mc-label">TBM</div><div class="mc-value">₺4.02</div><div class="mc-change neutral">—</div></div>
-      <div class="mc"><div class="mc-label">Tıklama Oranı</div><div class="mc-value">%4.42</div><div class="mc-change neutral">—</div></div>
-      <div class="mc"><div class="mc-label">BGBM</div><div class="mc-value">₺177.7</div><div class="mc-change neutral">—</div></div>
+      <div class="mc" data-ico="harcama"><div class="mc-label">Harcama</div><div class="mc-value">₺9,736.66</div><div class="mc-change neutral" title="Önceki dönem: ₺8.592,63">▲ %13,3</div></div>
+      <div class="mc" data-ico="donusum"><div class="mc-label">Dönüşüm</div><div class="mc-value">119</div><div class="mc-change down" title="Önceki dönem: 120">▼ %0,9</div></div>
+      <div class="mc" data-ico="roas"><div class="mc-label">ROAS</div><div class="mc-value">15.65x</div><div class="mc-change down" title="Önceki dönem: 16,25x">▼ %3,7</div></div>
+      <div class="mc" data-ico="tiklama"><div class="mc-label">TBM</div><div class="mc-value">₺4.02</div><div class="mc-change down" title="Önceki dönem: ₺3,99">▲ %0,9</div></div>
+      <div class="mc" data-ico="oran"><div class="mc-label">Tıklama Oranı</div><div class="mc-value">%4.42</div><div class="mc-change up" title="Önceki dönem: %3,84">▲ %15,0</div></div>
+      <div class="mc" data-ico="gosterim"><div class="mc-label">BGBM</div><div class="mc-value">₺177.7</div><div class="mc-change down" title="Önceki dönem: ₺153,13">▲ %16,0</div></div>
     </div>
   </div>
 
   <div class="plabel">Shopify</div>
   <div class="platform-block">
-    <div class="pb-header"><div class="pb-name">Shopify</div></div>
-    <div class="metrics-row" style="grid-template-columns:repeat(5,1fr)">
-      <div class="mc"><div class="mc-label">Gelir</div><div class="mc-value">₺743,074.95</div><div class="mc-change neutral">—</div></div>
-      <div class="mc"><div class="mc-label">Toplam ROAS</div><div class="mc-value">6.46x</div><div class="mc-change neutral">—</div></div>
-      <div class="mc"><div class="mc-label">Ort. Sepet</div><div class="mc-value">₺882.51</div><div class="mc-change neutral">—</div></div>
-      <div class="mc"><div class="mc-label">Sipariş</div><div class="mc-value">842</div><div class="mc-change neutral">—</div></div>
+    <div class="pb-header"><div class="pb-icon"><img src="logos/shopify-logo.png" alt="Shopify"></div><div class="pb-name">Shopify</div></div>
+    <div class="metrics-row" style="grid-template-columns:repeat(4,1fr)">
+      <div class="mc" data-ico="gelir"><div class="mc-label">Gelir</div><div class="mc-value">₺743,074.95</div><div class="mc-change down" title="Önceki dönem: ₺744.263,93">▼ %0,2</div></div>
+      <div class="mc" data-ico="roas"><div class="mc-label">Toplam ROAS</div><div class="mc-value">6.46x</div><div class="mc-change down" title="Önceki dönem: 6,74x">▼ %4,1</div></div>
+      <div class="mc" data-ico="sepet"><div class="mc-label">Ort. Sepet</div><div class="mc-value">₺882.51</div><div class="mc-change up" title="Önceki dönem: ₺864,42">▲ %2,1</div></div>
+      <div class="mc" data-ico="siparis"><div class="mc-label">Sipariş</div><div class="mc-value">842</div><div class="mc-change down" title="Önceki dönem: 861">▼ %2,2</div></div>
 
     </div>
   </div>
 
   <div class="plabel">Analizler</div>
 
-  <div class="charts-grid">
-    <div style="background:white;border-radius:10px;border:0.5px solid #cce0ee;padding:14px 16px;height:320px;display:flex;flex-direction:column;">
-      <div class="cc-title"><span>En çok satan ürünler</span><span class="cc-count">20 ürün</span></div>
-      <div class="scroll-area"><div class="bar-row"><div class="bar-rank">1</div><div class="bar-name">Riccon Kadın Sneaker 0012255 Beyaz Beyaz</div><div class="bar-track"><div class="bar-fill" style="width:100%;background:#2c77a3"></div></div><div class="bar-val">₺23,361.00</div></div><div class="bar-row"><div class="bar-rank">2</div><div class="bar-name">Riccon Qhedalvi Erkek Sneaker 0012404 Beyaz</div><div class="bar-track"><div class="bar-fill" style="width:94%;background:#2c77a3"></div></div><div class="bar-val">₺21,978.00</div></div><div class="bar-row"><div class="bar-rank">3</div><div class="bar-name">Riccon Qhedalvi Erkek Sneaker 0012404 Siyah Siyah</div><div class="bar-track"><div class="bar-fill" style="width:73%;background:#3a8fc4"></div></div><div class="bar-val">₺16,983.00</div></div><div class="bar-row"><div class="bar-rank">4</div><div class="bar-name">Riccon Iohsevel Kadın Topuklu Ayakkabı 0012124 Mat Siyah</div><div class="bar-track"><div class="bar-fill" style="width:44%;background:#3a8fc4"></div></div><div class="bar-val">₺10,368.00</div></div><div class="bar-row"><div class="bar-rank">5</div><div class="bar-name">Riccon Qhedalvi Erkek Sneaker 0012404 Siyah Beyaz</div><div class="bar-track"><div class="bar-fill" style="width:43%;background:#4a9cc4"></div></div><div class="bar-val">₺9,990.00</div></div><div class="bar-row"><div class="bar-rank">6</div><div class="bar-name">Riccon Unisex Sneaker 0012072 Siyah</div><div class="bar-track"><div class="bar-fill" style="width:41%;background:#4a9cc4"></div></div><div class="bar-val">₺9,588.00</div></div><div class="bar-row"><div class="bar-rank">7</div><div class="bar-name">Riccon Meshronei Kadın Sneaker 0012601 Beyaz</div><div class="bar-track"><div class="bar-fill" style="width:38%;background:#5aaad4"></div></div><div class="bar-val">₺8,811.00</div></div><div class="bar-row"><div class="bar-rank">8</div><div class="bar-name">Riccon Kadın İnce Topuklu Ayakkabı 001254 Siyah Rustik</div><div class="bar-track"><div class="bar-fill" style="width:34%;background:#5aaad4"></div></div><div class="bar-val">₺7,940.40</div></div><div class="bar-row"><div class="bar-rank">9</div><div class="bar-name">Riccon Saelheira Kadın Babet 0012250 Siyah Cilt</div><div class="bar-track"><div class="bar-fill" style="width:28%;background:#6ab8d8"></div></div><div class="bar-val">₺6,490.00</div></div><div class="bar-row"><div class="bar-rank">10</div><div class="bar-name">Riccon Hilnaril Kadın Sivri Topuklu Çizme 00123000 Siyah Cilt</div><div class="bar-track"><div class="bar-fill" style="width:26%;background:#6ab8d8"></div></div><div class="bar-val">₺6,072.43</div></div><div class="bar-row"><div class="bar-rank">11</div><div class="bar-name">Riccon Rosatora Kadın Sneaker 001210 Bej Taba</div><div class="bar-track"><div class="bar-fill" style="width:24%;background:#7ac6dc"></div></div><div class="bar-val">₺5,623.20</div></div><div class="bar-row"><div class="bar-rank">12</div><div class="bar-name">Riccon Rosatora Kadın Sneaker 001210 Buz Somon</div><div class="bar-track"><div class="bar-fill" style="width:24%;background:#7ac6dc"></div></div><div class="bar-val">₺5,623.20</div></div><div class="bar-row"><div class="bar-rank">13</div><div class="bar-name">Riccon Kadın Çizme 0012360 Siyah Cilt</div><div class="bar-track"><div class="bar-fill" style="width:24%;background:#8acfe0"></div></div><div class="bar-val">₺5,495.50</div></div><div class="bar-row"><div class="bar-rank">14</div><div class="bar-name">Riccon Kadın Sivri Burunlu Arkası Açık İnce Topuklu Ayakkabı 0012200 Mat Lacivert</div><div class="bar-track"><div class="bar-fill" style="width:22%;background:#8acfe0"></div></div><div class="bar-val">₺5,095.20</div></div><div class="bar-row"><div class="bar-rank">15</div><div class="bar-name">Riccon Unisex Sneaker 12020 Siyah Siyah</div><div class="bar-track"><div class="bar-fill" style="width:21%;background:#9ad8e4"></div></div><div class="bar-val">₺5,016.00</div></div><div class="bar-row"><div class="bar-rank">16</div><div class="bar-name">Riccon Unisex Sneaker 12020 Siyah Beyaz</div><div class="bar-track"><div class="bar-fill" style="width:21%;background:#9ad8e4"></div></div><div class="bar-val">₺5,016.00</div></div><div class="bar-row"><div class="bar-rank">17</div><div class="bar-name">Riccon Rosatora Kadın Sneaker 001210 Siyah Füme</div><div class="bar-track"><div class="bar-fill" style="width:21%;background:#aae0e8"></div></div><div class="bar-val">₺4,920.30</div></div><div class="bar-row"><div class="bar-rank">18</div><div class="bar-name">Riccon Tintneth Kadın Çizme 00121903 Siyah</div><div class="bar-track"><div class="bar-fill" style="width:21%;background:#aae0e8"></div></div><div class="bar-val">₺4,867.50</div></div><div class="bar-row"><div class="bar-rank">19</div><div class="bar-name">Riccon Erkek Sneaker 0012X20 Siyah Beyaz</div><div class="bar-track"><div class="bar-fill" style="width:21%;background:#bae8ec"></div></div><div class="bar-val">₺4,794.00</div></div><div class="bar-row"><div class="bar-rank">20</div><div class="bar-name">Riccon Erkek Casual Ayakkabı 0012146 Siyah Siyah</div><div class="bar-track"><div class="bar-fill" style="width:20%;background:#bae8ec"></div></div><div class="bar-val">₺4,635.00</div></div></div>
-    </div>
-    <div style="background:white;border-radius:10px;border:0.5px solid #cce0ee;padding:14px 16px;height:320px;display:flex;flex-direction:column;">
-      <div class="cc-title"><span>Saatlik sipariş dağılımı</span></div>
-      <div style="flex:1;min-height:0;position:relative;">
-        <canvas id="hourly_chart_last_7d" style="max-height:240px;"></canvas>
-      </div>
-    </div>
+  <div class="chart-card full" data-ico="urun">
+    <div class="cc-title"><span>En çok satan ürünler</span><span class="cc-count">20 ürün</span></div>
+    <div class="scroll-area"><div class="bar-row"><div class="bar-rank">1</div><div class="bar-name" title="Riccon Kadın Sneaker 0012255 Beyaz Beyaz">Riccon Kadın Sneaker 0012255 Beyaz Beyaz</div><div class="bar-track"><div class="bar-fill" style="width:100%;background:#2c77a3"></div></div><div class="bar-val">₺23,361.00</div></div><div class="bar-row"><div class="bar-rank">2</div><div class="bar-name" title="Riccon Qhedalvi Erkek Sneaker 0012404 Beyaz">Riccon Qhedalvi Erkek Sneaker 0012404 Beyaz</div><div class="bar-track"><div class="bar-fill" style="width:94%;background:#2c77a3"></div></div><div class="bar-val">₺21,978.00</div></div><div class="bar-row"><div class="bar-rank">3</div><div class="bar-name" title="Riccon Qhedalvi Erkek Sneaker 0012404 Siyah Siyah">Riccon Qhedalvi Erkek Sneaker 0012404 Siyah Siyah</div><div class="bar-track"><div class="bar-fill" style="width:73%;background:#3a8fc4"></div></div><div class="bar-val">₺16,983.00</div></div><div class="bar-row"><div class="bar-rank">4</div><div class="bar-name" title="Riccon Iohsevel Kadın Topuklu Ayakkabı 0012124 Mat Siyah">Riccon Iohsevel Kadın Topuklu Ayakkabı 0012124 Mat Siyah</div><div class="bar-track"><div class="bar-fill" style="width:44%;background:#3a8fc4"></div></div><div class="bar-val">₺10,368.00</div></div><div class="bar-row"><div class="bar-rank">5</div><div class="bar-name" title="Riccon Qhedalvi Erkek Sneaker 0012404 Siyah Beyaz">Riccon Qhedalvi Erkek Sneaker 0012404 Siyah Beyaz</div><div class="bar-track"><div class="bar-fill" style="width:43%;background:#4a9cc4"></div></div><div class="bar-val">₺9,990.00</div></div><div class="bar-row"><div class="bar-rank">6</div><div class="bar-name" title="Riccon Unisex Sneaker 0012072 Siyah">Riccon Unisex Sneaker 0012072 Siyah</div><div class="bar-track"><div class="bar-fill" style="width:41%;background:#4a9cc4"></div></div><div class="bar-val">₺9,588.00</div></div><div class="bar-row"><div class="bar-rank">7</div><div class="bar-name" title="Riccon Meshronei Kadın Sneaker 0012601 Beyaz">Riccon Meshronei Kadın Sneaker 0012601 Beyaz</div><div class="bar-track"><div class="bar-fill" style="width:38%;background:#5aaad4"></div></div><div class="bar-val">₺8,811.00</div></div><div class="bar-row"><div class="bar-rank">8</div><div class="bar-name" title="Riccon Kadın İnce Topuklu Ayakkabı 001254 Siyah Rustik">Riccon Kadın İnce Topuklu Ayakkabı 001254 Siyah Rustik</div><div class="bar-track"><div class="bar-fill" style="width:34%;background:#5aaad4"></div></div><div class="bar-val">₺7,940.40</div></div><div class="bar-row"><div class="bar-rank">9</div><div class="bar-name" title="Riccon Saelheira Kadın Babet 0012250 Siyah Cilt">Riccon Saelheira Kadın Babet 0012250 Siyah Cilt</div><div class="bar-track"><div class="bar-fill" style="width:28%;background:#6ab8d8"></div></div><div class="bar-val">₺6,490.00</div></div><div class="bar-row"><div class="bar-rank">10</div><div class="bar-name" title="Riccon Hilnaril Kadın Sivri Topuklu Çizme 00123000 Siyah Cilt">Riccon Hilnaril Kadın Sivri Topuklu Çizme 00123000 Siyah Cilt</div><div class="bar-track"><div class="bar-fill" style="width:26%;background:#6ab8d8"></div></div><div class="bar-val">₺6,072.43</div></div><div class="bar-row"><div class="bar-rank">11</div><div class="bar-name" title="Riccon Rosatora Kadın Sneaker 001210 Bej Taba">Riccon Rosatora Kadın Sneaker 001210 Bej Taba</div><div class="bar-track"><div class="bar-fill" style="width:24%;background:#7ac6dc"></div></div><div class="bar-val">₺5,623.20</div></div><div class="bar-row"><div class="bar-rank">12</div><div class="bar-name" title="Riccon Rosatora Kadın Sneaker 001210 Buz Somon">Riccon Rosatora Kadın Sneaker 001210 Buz Somon</div><div class="bar-track"><div class="bar-fill" style="width:24%;background:#7ac6dc"></div></div><div class="bar-val">₺5,623.20</div></div><div class="bar-row"><div class="bar-rank">13</div><div class="bar-name" title="Riccon Kadın Çizme 0012360 Siyah Cilt">Riccon Kadın Çizme 0012360 Siyah Cilt</div><div class="bar-track"><div class="bar-fill" style="width:24%;background:#8acfe0"></div></div><div class="bar-val">₺5,495.50</div></div><div class="bar-row"><div class="bar-rank">14</div><div class="bar-name" title="Riccon Kadın Sivri Burunlu Arkası Açık İnce Topuklu Ayakkabı 0012200 Mat Lacivert">Riccon Kadın Sivri Burunlu Arkası Açık İnce Topuklu Ayakkabı 0012200 Mat Lacivert</div><div class="bar-track"><div class="bar-fill" style="width:22%;background:#8acfe0"></div></div><div class="bar-val">₺5,095.20</div></div><div class="bar-row"><div class="bar-rank">15</div><div class="bar-name" title="Riccon Unisex Sneaker 12020 Siyah Siyah">Riccon Unisex Sneaker 12020 Siyah Siyah</div><div class="bar-track"><div class="bar-fill" style="width:21%;background:#9ad8e4"></div></div><div class="bar-val">₺5,016.00</div></div><div class="bar-row"><div class="bar-rank">16</div><div class="bar-name" title="Riccon Unisex Sneaker 12020 Siyah Beyaz">Riccon Unisex Sneaker 12020 Siyah Beyaz</div><div class="bar-track"><div class="bar-fill" style="width:21%;background:#9ad8e4"></div></div><div class="bar-val">₺5,016.00</div></div><div class="bar-row"><div class="bar-rank">17</div><div class="bar-name" title="Riccon Rosatora Kadın Sneaker 001210 Siyah Füme">Riccon Rosatora Kadın Sneaker 001210 Siyah Füme</div><div class="bar-track"><div class="bar-fill" style="width:21%;background:#aae0e8"></div></div><div class="bar-val">₺4,920.30</div></div><div class="bar-row"><div class="bar-rank">18</div><div class="bar-name" title="Riccon Tintneth Kadın Çizme 00121903 Siyah">Riccon Tintneth Kadın Çizme 00121903 Siyah</div><div class="bar-track"><div class="bar-fill" style="width:21%;background:#aae0e8"></div></div><div class="bar-val">₺4,867.50</div></div><div class="bar-row"><div class="bar-rank">19</div><div class="bar-name" title="Riccon Erkek Sneaker 0012X20 Siyah Beyaz">Riccon Erkek Sneaker 0012X20 Siyah Beyaz</div><div class="bar-track"><div class="bar-fill" style="width:21%;background:#bae8ec"></div></div><div class="bar-val">₺4,794.00</div></div><div class="bar-row"><div class="bar-rank">20</div><div class="bar-name" title="Riccon Erkek Casual Ayakkabı 0012146 Siyah Siyah">Riccon Erkek Casual Ayakkabı 0012146 Siyah Siyah</div><div class="bar-track"><div class="bar-fill" style="width:20%;background:#bae8ec"></div></div><div class="bar-val">₺4,635.00</div></div></div>
   </div>
 
-  <div class="charts-grid">
-    <div style="background:white;border-radius:10px;border:0.5px solid #cce0ee;padding:14px 16px;height:320px;display:flex;flex-direction:column;">
-      <div class="cc-title"><span>Platform harcama dağılımı</span></div>
-      <div class="pie-wrap">
-        <canvas id="pie_spend_last_7d" width="180" height="180"></canvas>
-      </div>
-      <div class="pie-legend">
-        <div style="display:flex;align-items:center;gap:5px"><div class="pie-dot" style="background:#1877f2"></div><div class="pie-label">Meta · ₺105,297.59</div></div>
-        <div style="display:flex;align-items:center;gap:5px"><div class="pie-dot" style="background:#ea4335"></div><div class="pie-label">Google · ₺9,736.67</div></div>
-      </div>
-    </div>
-    <div style="background:white;border-radius:10px;border:0.5px solid #cce0ee;padding:14px 16px;height:320px;display:flex;flex-direction:column;">
-      <div class="cc-title"><span>Platform dönüşüm geliri dağılımı</span></div>
-      <div class="pie-wrap">
-        <canvas id="pie_roas_last_7d" width="180" height="180"></canvas>
-      </div>
-      <div class="pie-legend">
-        <div style="display:flex;align-items:center;gap:5px"><div class="pie-dot" style="background:#1877f2"></div><div class="pie-label">Meta · ₺691,014.47</div></div>
-        <div style="display:flex;align-items:center;gap:5px"><div class="pie-dot" style="background:#ea4335"></div><div class="pie-label">Google · ₺152,363.56</div></div>
-      </div>
-    </div>
+  <div class="chart-card full" data-ico="saat">
+    <div class="cc-title"><span>Saatlik sipariş dağılımı</span></div>
+    <div class="hourly-box"><canvas id="hourly_chart_last_7d"></canvas></div>
   </div>
 
-  <div class="charts-grid">
-    <div style="background:white;border-radius:10px;border:0.5px solid #cce0ee;padding:14px 16px;height:320px;display:flex;flex-direction:column;">
-      <div class="cc-title"><span>Meta — En yüksek ROAS'lı reklamlar</span></div>
-      <div class="scroll-area" id="meta_ads_last_7d"></div>
-    </div>
-    <div style="background:white;border-radius:10px;border:0.5px solid #cce0ee;padding:14px 16px;height:320px;display:flex;flex-direction:column;">
-      <div class="cc-title"><span>Google — En yüksek ROAS'lı reklamlar</span></div>
-      <div class="scroll-area" id="google_ads_last_7d"></div>
-    </div>
+    <div class="plabel">Meta Ads — En iyi performanslı içerikler</div>
+  <div class="chart-card full icerik-kart" data-ico="reklam">
+    <div class="cc-title"><span>En iyi performanslı içerikler</span><span class="cc-count">10 gönderi · ROAS'a göre sıralı</span></div>
+    
+    <div class="icerik-liste"><div class="icerik-satir"><div class="ic-rank">1</div><div class="ic-gorsel"><img src="icerik/4023705667919402.jpg" alt="" loading="lazy"></div><div class="ic-metin"><div class="ic-aciklama" title="Fırsatları Kaçırma ⚡️
+⚡️ 2. Üründe %25 EK İndirim
+📦 Ücretsiz Kargo
+💳 Peşin Fiyatına 3 Taksit
+www.riccon.com.tr">Fırsatları Kaçırma ⚡️
+⚡️ 2. Üründe %25 EK İndirim
+📦 Ücretsiz Kargo
+💳 Peşin Fiyatına 3 Taksit
+www.riccon.com.tr</div><a class="ic-link" href="https://www.instagram.com/p/DdEQ-CcMUCy/" target="_blank" rel="noopener">Instagram'da aç ↗</a></div><div class="ic-metrik"><span>Harcama</span><b>₺1.336,24</b></div><div class="ic-metrik"><span>Gelir</span><b>₺13.582,82</b></div><div class="ic-metrik vurgu"><span>ROAS</span><b>10,16x</b></div><div class="ic-metrik"><span>Tıklama Oranı</span><b>%8,13</b></div></div><div class="icerik-satir"><div class="ic-rank">2</div><div class="ic-gorsel"><img src="icerik/1445242377151491.jpg" alt="" loading="lazy"></div><div class="ic-metin"><div class="ic-aciklama" title="Gün Boyu Konfor!
+
+Qhedalvi Erkek Sneaker
+
+⚡️ 2. Üründe %25 EK İndirim
+📦 Ücretsiz Kargo
+💳 Peşin Fiyatına 3 Taksit">Gün Boyu Konfor!
+
+Qhedalvi Erkek Sneaker
+
+⚡️ 2. Üründe %25 EK İndirim
+📦 Ücretsiz Kargo
+💳 Peşin Fiyatına 3 Taksit</div><a class="ic-link" href="https://www.instagram.com/p/DU0I1P1DL5t/" target="_blank" rel="noopener">Instagram'da aç ↗</a></div><div class="ic-metrik"><span>Harcama</span><b>₺517,94</b></div><div class="ic-metrik"><span>Gelir</span><b>₺4.769,50</b></div><div class="ic-metrik vurgu"><span>ROAS</span><b>9,21x</b></div><div class="ic-metrik"><span>Tıklama Oranı</span><b>%2,24</b></div></div><div class="icerik-satir"><div class="ic-rank">3</div><div class="ic-gorsel"><img src="icerik/26247781481540357.jpg" alt="" loading="lazy"></div><div class="ic-metin"><div class="ic-aciklama" title="Modern &amp; Estetik !
+
+Iarwarin Kadın Kısa Topuklu Ayakkabı
+
+⚡️ 2. Üründe %25 EK İndirim
+📦 Ücretsiz Kargo
+💳 Peşin Fiyatına 3 Taksit">Modern &amp; Estetik !
+
+Iarwarin Kadın Kısa Topuklu Ayakkabı
+
+⚡️ 2. Üründe %25 EK İndirim
+📦 Ücretsiz Kargo
+💳 Peşin Fiyatına 3 Taksit</div><a class="ic-link" href="https://www.instagram.com/p/DWV744CjKcc/" target="_blank" rel="noopener">Instagram'da aç ↗</a></div><div class="ic-metrik"><span>Harcama</span><b>₺4.637,08</b></div><div class="ic-metrik"><span>Gelir</span><b>₺41.773,17</b></div><div class="ic-metrik vurgu"><span>ROAS</span><b>9,01x</b></div><div class="ic-metrik"><span>Tıklama Oranı</span><b>%5,07</b></div></div><div class="icerik-satir"><div class="ic-rank">4</div><div class="ic-gorsel"><img src="icerik/2052444492285698.jpg" alt="" loading="lazy"></div><div class="ic-metin"><div class="ic-aciklama" title="Yeni sezonda trendler dolabında  💫
+En iyi fiyat avantajı ❤️">Yeni sezonda trendler dolabında  💫
+En iyi fiyat avantajı ❤️</div></div><div class="ic-metrik"><span>Harcama</span><b>₺7.236,04</b></div><div class="ic-metrik"><span>Gelir</span><b>₺59.748,32</b></div><div class="ic-metrik vurgu"><span>ROAS</span><b>8,26x</b></div><div class="ic-metrik"><span>Tıklama Oranı</span><b>%7,32</b></div></div><div class="icerik-satir"><div class="ic-rank">5</div><div class="ic-gorsel"><img src="icerik/1720500852150771.jpg" alt="" loading="lazy"></div><div class="ic-metin"><div class="ic-aciklama" title="Yeni Sezon, Yeni Fırsatlar 🫶🏻
+⭐️ Net %40 İndirim
+⚡️ 2. Üründe %25 EK İndirim
+📦 Ücretsiz Kargo
+💳 Peşin Fiyatına 3 Taksit
+💫 Yeni Üyelere Özel %10 İndirim">Yeni Sezon, Yeni Fırsatlar 🫶🏻
+⭐️ Net %40 İndirim
+⚡️ 2. Üründe %25 EK İndirim
+📦 Ücretsiz Kargo
+💳 Peşin Fiyatına 3 Taksit
+💫 Yeni Üyelere Özel %10 İndirim</div></div><div class="ic-metrik"><span>Harcama</span><b>₺10.805,43</b></div><div class="ic-metrik"><span>Gelir</span><b>₺88.735,48</b></div><div class="ic-metrik vurgu"><span>ROAS</span><b>8,21x</b></div><div class="ic-metrik"><span>Tıklama Oranı</span><b>%5,38</b></div></div><div class="icerik-satir"><div class="ic-rank">6</div><div class="ic-gorsel"><img src="icerik/669569412154163.jpg" alt="" loading="lazy"></div><div class="ic-metin"><div class="ic-aciklama" title="Simsiyah🖤 Sezon Sonuna Özel 449TL 💎
+
+Ürün Kodu: 0012124 Mat Siyah
+
+⚡️ 2. Üründe %25 EK İndirim
+📦 Ücretsiz Kargo
+💳 Peşin Fiyatına 3 Taksit">Simsiyah🖤 Sezon Sonuna Özel 449TL 💎
+
+Ürün Kodu: 0012124 Mat Siyah
+
+⚡️ 2. Üründe %25 EK İndirim
+📦 Ücretsiz Kargo
+💳 Peşin Fiyatına 3 Taksit</div><a class="ic-link" href="https://www.instagram.com/p/DIdXQQpMuqU/" target="_blank" rel="noopener">Instagram'da aç ↗</a></div><div class="ic-metrik"><span>Harcama</span><b>₺7.184,41</b></div><div class="ic-metrik"><span>Gelir</span><b>₺58.578,54</b></div><div class="ic-metrik vurgu"><span>ROAS</span><b>8,15x</b></div><div class="ic-metrik"><span>Tıklama Oranı</span><b>%4,64</b></div></div><div class="icerik-satir"><div class="ic-rank">7</div><div class="ic-gorsel"><img src="icerik/1424003332550699.jpg" alt="" loading="lazy"></div><div class="ic-metin"><div class="ic-aciklama" title="Rahat tasarım rahat ayaklar🧡
+
+Ürün Kodu: 0012159 Ekru
+
+⭐️ Net %40 İndirim
+⚡️ 2. Üründe %25 EK İndirim
+📦 Ücretsiz Kargo
+💳 Peşin Fiyatına 3 Taksit">Rahat tasarım rahat ayaklar🧡
+
+Ürün Kodu: 0012159 Ekru
+
+⭐️ Net %40 İndirim
+⚡️ 2. Üründe %25 EK İndirim
+📦 Ücretsiz Kargo
+💳 Peşin Fiyatına 3 Taksit</div><a class="ic-link" href="https://www.instagram.com/p/DIdbTMAMbFC/" target="_blank" rel="noopener">Instagram'da aç ↗</a></div><div class="ic-metrik"><span>Harcama</span><b>₺4.202,71</b></div><div class="ic-metrik"><span>Gelir</span><b>₺32.061,05</b></div><div class="ic-metrik vurgu"><span>ROAS</span><b>7,63x</b></div><div class="ic-metrik"><span>Tıklama Oranı</span><b>%3,34</b></div></div><div class="icerik-satir"><div class="ic-rank">8</div><div class="ic-gorsel"><img src="icerik/2104419353368452.jpg" alt="" loading="lazy"></div><div class="ic-metin"><div class="ic-aciklama" title="Riccon’da Seni Bekleyen İndirimler Var ⚡️
+Sepetindeki Ürünleri Unutma 😉
+www.riccon.com.tr">Riccon’da Seni Bekleyen İndirimler Var ⚡️
+Sepetindeki Ürünleri Unutma 😉
+www.riccon.com.tr</div></div><div class="ic-metrik"><span>Harcama</span><b>₺5.077,85</b></div><div class="ic-metrik"><span>Gelir</span><b>₺37.685,09</b></div><div class="ic-metrik vurgu"><span>ROAS</span><b>7,42x</b></div><div class="ic-metrik"><span>Tıklama Oranı</span><b>%6,50</b></div></div><div class="icerik-satir"><div class="ic-rank">9</div><div class="ic-gorsel"><img src="icerik/2834951626856803.jpg" alt="" loading="lazy"></div><div class="ic-metin"><div class="ic-aciklama" title="Yeni sezonun en sevilen modeli en iyi fiyat avantajıyla 💙">Yeni sezonun en sevilen modeli en iyi fiyat avantajıyla 💙</div></div><div class="ic-metrik"><span>Harcama</span><b>₺4.563,09</b></div><div class="ic-metrik"><span>Gelir</span><b>₺28.258,00</b></div><div class="ic-metrik vurgu"><span>ROAS</span><b>6,19x</b></div><div class="ic-metrik"><span>Tıklama Oranı</span><b>%2,55</b></div></div><div class="icerik-satir"><div class="ic-rank">10</div><div class="ic-gorsel"><img src="icerik/1316776153227908.jpg" alt="" loading="lazy"></div><div class="ic-metin"><div class="ic-aciklama" title="Sepetinde Unuttuğun Ürünlere Özel 🙃
+Tüm İndirimlere EK 100TL İndirim Fırsatı
+İndirim Kodu: RC100 
+
+⭐️ Net %40 İndirim
+⚡️ 2. Üründe %25 EK İndirim
+📦 Ücretsiz Kargo
+💳 Peşin Fiyatına 3 Taksit
+
+&#x27;1000TL ve Üzeri Alışverişlerde Geçerlidir&#x27; ❤️">Sepetinde Unuttuğun Ürünlere Özel 🙃
+Tüm İndirimlere EK 100TL İndirim Fırsatı
+İndirim Kodu: RC100 
+
+⭐️ Net %40 İndirim
+⚡️ 2. Üründe %25 EK İndirim
+📦 Ücretsiz Kargo
+💳 Peşin Fiyatına 3 Taksit
+
+&#x27;1000TL ve Üzeri Alışverişlerde Geçerlidir&#x27; ❤️</div><a class="ic-link" href="https://www.instagram.com/p/DdEQCi7Mh4Z/" target="_blank" rel="noopener">Instagram'da aç ↗</a></div><div class="ic-metrik"><span>Harcama</span><b>₺7.295,50</b></div><div class="ic-metrik"><span>Gelir</span><b>₺44.468,03</b></div><div class="ic-metrik vurgu"><span>ROAS</span><b>6,10x</b></div><div class="ic-metrik"><span>Tıklama Oranı</span><b>%4,05</b></div></div></div>
   </div>
 
 </div>
@@ -361,8 +749,8 @@ body{background:#f0f6fb;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',
 <script>
 (function(){
   var labels = ['00:00', '01:00', '02:00', '03:00', '04:00', '05:00', '06:00', '07:00', '08:00', '09:00', '10:00', '11:00', '12:00', '13:00', '14:00', '15:00', '16:00', '17:00', '18:00', '19:00', '20:00', '21:00', '22:00', '23:00'];
-  var counts = [57, 61, 45, 28, 27, 6, 6, 3, 4, 4, 4, 16, 28, 40, 42, 61, 57, 45, 64, 53, 50, 38, 51, 52];
-  var revenues = [48957.61, 52505.08, 38209.05, 24052.67, 24334.56, 5070.4, 5790.16, 2170.1, 3409.5, 4070.49, 3337.14, 14864.26, 25024.48, 40786.87, 36395.33, 54550.47, 47512.64, 42898.53, 53621.49, 47053.09, 41785.11, 32884.46, 48634.78, 45156.68];
+  var counts = [28, 27, 6, 6, 3, 4, 4, 4, 16, 28, 40, 42, 61, 57, 45, 64, 53, 50, 38, 51, 52, 57, 61, 45];
+  var revenues = [24052.67, 24334.56, 5070.4, 5790.16, 2170.1, 3409.5, 4070.49, 3337.14, 14864.26, 25024.48, 40786.87, 36395.33, 54550.47, 47512.64, 42898.53, 53621.49, 47053.09, 41785.11, 32884.46, 48634.78, 45156.68, 48957.61, 52505.08, 38209.05];
   window.addEventListener('load', function(){
     var ctx = document.getElementById('hourly_chart_last_7d');
     if(!ctx) return;
@@ -408,115 +796,190 @@ body{background:#f0f6fb;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',
 <div id="period-last_30d" class="period-content ">
 <div class="wrap">
 
+  <div class="kars-not"><span class="kars-tag">Karşılaştırma</span><span><b>12.08.2026 — 10.09.2026</b> (30 gün) &nbsp;·&nbsp; önceki dönem: <b>13.07.2026 — 11.08.2026</b></span></div>
   <div class="plabel">Genel Özet</div>
   <div class="summary-grid">
-    <div class="scard">
+    <div class="scard" data-ico="harcama">
       <div class="scard-label">Toplam Harcama</div>
-      <div class="scard-value">₺513,483.78</div>
-      <div class="scard-sub neutral">—</div>
+      <div class="scard-value">₺513,488.54</div>
+      <div class="scard-sub neutral" title="Önceki dönem: ₺657.966,78">▼ %22,0</div>
     </div>
-    <div class="scard green">
+    <div class="scard green" data-ico="gelir">
       <div class="scard-label">Toplam Gelir</div>
       <div class="scard-value">₺3,427,545.29</div>
-      <div class="scard-sub neutral">—</div>
+      <div class="scard-sub down" title="Önceki dönem: ₺4.918.776,85">▼ %30,3</div>
     </div>
-    <div class="scard orange">
+    <div class="scard orange" data-ico="roas">
       <div class="scard-label">Toplam ROAS</div>
       <div class="scard-value">6.68x</div>
-      <div class="scard-sub neutral">—</div>
+      <div class="scard-sub down" title="Önceki dönem: 7,48x">▼ %10,6</div>
     </div>
-    <div class="scard purple">
+    <div class="scard purple" data-ico="siparis">
       <div class="scard-label">Toplam Sipariş</div>
       <div class="scard-value">4076</div>
-      <div class="scard-sub neutral">—</div>
+      <div class="scard-sub down" title="Önceki dönem: 5.980">▼ %31,8</div>
     </div>
   </div>
 
   <div class="plabel">Meta Ads</div>
   <div class="platform-block">
-    <div class="pb-header"><div class="pb-name">Meta Ads</div></div>
+    <div class="pb-header"><div class="pb-icon"><img src="logos/meta-ads-logo.png" alt="Meta"></div><div class="pb-name">Meta Ads</div></div>
     <div class="metrics-row" style="grid-template-columns:repeat(6,1fr)">
-      <div class="mc"><div class="mc-label">Harcama</div><div class="mc-value">₺473,913.14</div><div class="mc-change neutral">—</div></div>
-      <div class="mc"><div class="mc-label">Alışveriş</div><div class="mc-value">3284</div><div class="mc-change neutral">—</div></div>
-      <div class="mc"><div class="mc-label">ROAS</div><div class="mc-value">6.6x</div><div class="mc-change neutral">—</div></div>
-      <div class="mc"><div class="mc-label">CPC</div><div class="mc-value">₺1.63</div><div class="mc-change neutral">—</div></div>
-      <div class="mc"><div class="mc-label">CTR</div><div class="mc-value">%5.78</div><div class="mc-change neutral">—</div></div>
-      <div class="mc"><div class="mc-label">CPM</div><div class="mc-value">₺94.11</div><div class="mc-change neutral">—</div></div>
+      <div class="mc" data-ico="harcama"><div class="mc-label">Harcama</div><div class="mc-value">₺473,917.91</div><div class="mc-change neutral" title="Önceki dönem: ₺618.923,43">▼ %23,4</div></div>
+      <div class="mc" data-ico="sepet"><div class="mc-label">Alışveriş</div><div class="mc-value">3284</div><div class="mc-change down" title="Önceki dönem: 5.004">▼ %34,4</div></div>
+      <div class="mc" data-ico="roas"><div class="mc-label">ROAS</div><div class="mc-value">6.6x</div><div class="mc-change down" title="Önceki dönem: 7,51x">▼ %12,1</div></div>
+      <div class="mc" data-ico="tiklama"><div class="mc-label">CPC</div><div class="mc-value">₺1.63</div><div class="mc-change down" title="Önceki dönem: ₺1,61">▲ %1,2</div></div>
+      <div class="mc" data-ico="oran"><div class="mc-label">CTR</div><div class="mc-value">%5.78</div><div class="mc-change up" title="Önceki dönem: %5,60">▲ %3,2</div></div>
+      <div class="mc" data-ico="gosterim"><div class="mc-label">CPM</div><div class="mc-value">₺94.11</div><div class="mc-change down" title="Önceki dönem: ₺90,25">▲ %4,3</div></div>
     </div>
   </div>
 
   <div class="plabel">Google Ads</div>
   <div class="platform-block">
-    <div class="pb-header"><div class="pb-name">Google Ads</div></div>
+    <div class="pb-header"><div class="pb-icon"><img src="logos/google-ads-logo.png" alt="Google Ads"></div><div class="pb-name">Google Ads</div></div>
     <div class="metrics-row" style="grid-template-columns:repeat(6,1fr)">
-      <div class="mc"><div class="mc-label">Harcama</div><div class="mc-value">₺39,570.64</div><div class="mc-change neutral">—</div></div>
-      <div class="mc"><div class="mc-label">Dönüşüm</div><div class="mc-value">702</div><div class="mc-change neutral">—</div></div>
-      <div class="mc"><div class="mc-label">ROAS</div><div class="mc-value">20.41x</div><div class="mc-change neutral">—</div></div>
-      <div class="mc"><div class="mc-label">TBM</div><div class="mc-value">₺3.8</div><div class="mc-change neutral">—</div></div>
-      <div class="mc"><div class="mc-label">Tıklama Oranı</div><div class="mc-value">%5.23</div><div class="mc-change neutral">—</div></div>
-      <div class="mc"><div class="mc-label">BGBM</div><div class="mc-value">₺198.59</div><div class="mc-change neutral">—</div></div>
+      <div class="mc" data-ico="harcama"><div class="mc-label">Harcama</div><div class="mc-value">₺39,570.63</div><div class="mc-change neutral" title="Önceki dönem: ₺39.043,35">▲ %1,4</div></div>
+      <div class="mc" data-ico="donusum"><div class="mc-label">Dönüşüm</div><div class="mc-value">703</div><div class="mc-change down" title="Önceki dönem: 1.043">▼ %32,6</div></div>
+      <div class="mc" data-ico="roas"><div class="mc-label">ROAS</div><div class="mc-value">20.44x</div><div class="mc-change down" title="Önceki dönem: 29,50x">▼ %30,7</div></div>
+      <div class="mc" data-ico="tiklama"><div class="mc-label">TBM</div><div class="mc-value">₺3.8</div><div class="mc-change down" title="Önceki dönem: ₺3,48">▲ %9,1</div></div>
+      <div class="mc" data-ico="oran"><div class="mc-label">Tıklama Oranı</div><div class="mc-value">%5.23</div><div class="mc-change down" title="Önceki dönem: %10,81">▼ %51,6</div></div>
+      <div class="mc" data-ico="gosterim"><div class="mc-label">BGBM</div><div class="mc-value">₺198.59</div><div class="mc-change up" title="Önceki dönem: ₺376,28">▼ %47,2</div></div>
     </div>
   </div>
 
   <div class="plabel">Shopify</div>
   <div class="platform-block">
-    <div class="pb-header"><div class="pb-name">Shopify</div></div>
-    <div class="metrics-row" style="grid-template-columns:repeat(5,1fr)">
-      <div class="mc"><div class="mc-label">Gelir</div><div class="mc-value">₺3,427,545.29</div><div class="mc-change neutral">—</div></div>
-      <div class="mc"><div class="mc-label">Toplam ROAS</div><div class="mc-value">6.68x</div><div class="mc-change neutral">—</div></div>
-      <div class="mc"><div class="mc-label">Ort. Sepet</div><div class="mc-value">₺840.91</div><div class="mc-change neutral">—</div></div>
-      <div class="mc"><div class="mc-label">Sipariş</div><div class="mc-value">4076</div><div class="mc-change neutral">—</div></div>
+    <div class="pb-header"><div class="pb-icon"><img src="logos/shopify-logo.png" alt="Shopify"></div><div class="pb-name">Shopify</div></div>
+    <div class="metrics-row" style="grid-template-columns:repeat(4,1fr)">
+      <div class="mc" data-ico="gelir"><div class="mc-label">Gelir</div><div class="mc-value">₺3,427,545.29</div><div class="mc-change down" title="Önceki dönem: ₺4.918.776,85">▼ %30,3</div></div>
+      <div class="mc" data-ico="roas"><div class="mc-label">Toplam ROAS</div><div class="mc-value">6.68x</div><div class="mc-change down" title="Önceki dönem: 7,48x">▼ %10,6</div></div>
+      <div class="mc" data-ico="sepet"><div class="mc-label">Ort. Sepet</div><div class="mc-value">₺840.91</div><div class="mc-change up" title="Önceki dönem: ₺822,54">▲ %2,2</div></div>
+      <div class="mc" data-ico="siparis"><div class="mc-label">Sipariş</div><div class="mc-value">4076</div><div class="mc-change down" title="Önceki dönem: 5.980">▼ %31,8</div></div>
 
     </div>
   </div>
 
   <div class="plabel">Analizler</div>
 
-  <div class="charts-grid">
-    <div style="background:white;border-radius:10px;border:0.5px solid #cce0ee;padding:14px 16px;height:320px;display:flex;flex-direction:column;">
-      <div class="cc-title"><span>En çok satan ürünler</span><span class="cc-count">20 ürün</span></div>
-      <div class="scroll-area"><div class="bar-row"><div class="bar-rank">1</div><div class="bar-name">Riccon Qhedalvi Erkek Sneaker 0012404 Beyaz</div><div class="bar-track"><div class="bar-fill" style="width:100%;background:#2c77a3"></div></div><div class="bar-val">₺64,935.00</div></div><div class="bar-row"><div class="bar-rank">2</div><div class="bar-name">Riccon Kadın Sneaker 0012255 Beyaz Beyaz</div><div class="bar-track"><div class="bar-fill" style="width:86%;background:#2c77a3"></div></div><div class="bar-val">₺55,707.00</div></div><div class="bar-row"><div class="bar-rank">3</div><div class="bar-name">Riccon Qhedalvi Erkek Sneaker 0012404 Siyah Beyaz</div><div class="bar-track"><div class="bar-fill" style="width:66%;background:#3a8fc4"></div></div><div class="bar-val">₺42,957.00</div></div><div class="bar-row"><div class="bar-rank">4</div><div class="bar-name">Riccon Unisex Sneaker 0012072 Siyah</div><div class="bar-track"><div class="bar-fill" style="width:64%;background:#3a8fc4"></div></div><div class="bar-val">₺41,548.00</div></div><div class="bar-row"><div class="bar-rank">5</div><div class="bar-name">Riccon Iohsevel Kadın Topuklu Ayakkabı 0012124 Mat Siyah</div><div class="bar-track"><div class="bar-fill" style="width:58%;background:#4a9cc4"></div></div><div class="bar-val">₺37,440.00</div></div><div class="bar-row"><div class="bar-rank">6</div><div class="bar-name">Riccon Meshronei Kadın Sneaker 0012601 Beyaz</div><div class="bar-track"><div class="bar-fill" style="width:57%;background:#4a9cc4"></div></div><div class="bar-val">₺37,006.20</div></div><div class="bar-row"><div class="bar-rank">7</div><div class="bar-name">Riccon Qhedalvi Erkek Sneaker 0012404 Siyah Siyah</div><div class="bar-track"><div class="bar-fill" style="width:52%;background:#5aaad4"></div></div><div class="bar-val">₺33,966.00</div></div><div class="bar-row"><div class="bar-rank">8</div><div class="bar-name">Riccon Gisesalia Kadın Topuklu Terlik 00120036 Siyah</div><div class="bar-track"><div class="bar-fill" style="width:40%;background:#5aaad4"></div></div><div class="bar-val">₺25,968.80</div></div><div class="bar-row"><div class="bar-rank">9</div><div class="bar-name">Riccon Gisesalia Kadın Topuklu Terlik 00120036 Ten</div><div class="bar-track"><div class="bar-fill" style="width:39%;background:#6ab8d8"></div></div><div class="bar-val">₺25,469.40</div></div><div class="bar-row"><div class="bar-rank">10</div><div class="bar-name">Riccon Qhedalvi Erkek Sneaker 0012404 Taba</div><div class="bar-track"><div class="bar-fill" style="width:38%;background:#6ab8d8"></div></div><div class="bar-val">₺24,975.00</div></div><div class="bar-row"><div class="bar-rank">11</div><div class="bar-name">Riccon Qhedalvi Erkek Sneaker 0012404 Kahverengi</div><div class="bar-track"><div class="bar-fill" style="width:37%;background:#7ac6dc"></div></div><div class="bar-val">₺23,976.00</div></div><div class="bar-row"><div class="bar-rank">12</div><div class="bar-name">Riccon Kadın İnce Topuklu Terlik 001251 Siyah Rustik</div><div class="bar-track"><div class="bar-fill" style="width:37%;background:#7ac6dc"></div></div><div class="bar-val">₺23,821.20</div></div><div class="bar-row"><div class="bar-rank">13</div><div class="bar-name">Riccon Kadın İnce Topuklu Ayakkabı 001254 Kahverengi Rustik</div><div class="bar-track"><div class="bar-fill" style="width:37%;background:#8acfe0"></div></div><div class="bar-val">₺23,821.20</div></div><div class="bar-row"><div class="bar-rank">14</div><div class="bar-name">Riccon Iohsevel Kadın Topuklu Ayakkabı 0012124 Siyah Cilt</div><div class="bar-track"><div class="bar-fill" style="width:36%;background:#8acfe0"></div></div><div class="bar-val">₺23,616.00</div></div><div class="bar-row"><div class="bar-rank">15</div><div class="bar-name">Riccon Kadın Sivri Burunlu Arkası Açık İnce Topuklu Ayakkabı 0012200 Mat Ten</div><div class="bar-track"><div class="bar-fill" style="width:34%;background:#9ad8e4"></div></div><div class="bar-val">₺22,291.50</div></div><div class="bar-row"><div class="bar-rank">16</div><div class="bar-name">Riccon Kadın Sneaker 0012140 Beyaz</div><div class="bar-track"><div class="bar-fill" style="width:34%;background:#9ad8e4"></div></div><div class="bar-val">₺22,092.00</div></div><div class="bar-row"><div class="bar-rank">17</div><div class="bar-name">Riccon Qhedalvi Erkek Sneaker 0012404 Lacivert</div><div class="bar-track"><div class="bar-fill" style="width:34%;background:#aae0e8"></div></div><div class="bar-val">₺21,978.00</div></div><div class="bar-row"><div class="bar-rank">18</div><div class="bar-name">Riccon Unisex Sneaker 0012072 Buz Mor</div><div class="bar-track"><div class="bar-fill" style="width:33%;background:#aae0e8"></div></div><div class="bar-val">₺21,573.00</div></div><div class="bar-row"><div class="bar-rank">19</div><div class="bar-name">Riccon Aanlarel Kadın Topuklu Ayakkabı 0012035 Bej</div><div class="bar-track"><div class="bar-fill" style="width:33%;background:#bae8ec"></div></div><div class="bar-val">₺21,463.20</div></div><div class="bar-row"><div class="bar-rank">20</div><div class="bar-name">Riccon Kadın İnce Topuklu Ayakkabı 001254 Siyah Rustik</div><div class="bar-track"><div class="bar-fill" style="width:31%;background:#bae8ec"></div></div><div class="bar-val">₺20,156.40</div></div></div>
-    </div>
-    <div style="background:white;border-radius:10px;border:0.5px solid #cce0ee;padding:14px 16px;height:320px;display:flex;flex-direction:column;">
-      <div class="cc-title"><span>Saatlik sipariş dağılımı</span></div>
-      <div style="flex:1;min-height:0;position:relative;">
-        <canvas id="hourly_chart_last_30d" style="max-height:240px;"></canvas>
-      </div>
-    </div>
+  <div class="chart-card full" data-ico="urun">
+    <div class="cc-title"><span>En çok satan ürünler</span><span class="cc-count">20 ürün</span></div>
+    <div class="scroll-area"><div class="bar-row"><div class="bar-rank">1</div><div class="bar-name" title="Riccon Qhedalvi Erkek Sneaker 0012404 Beyaz">Riccon Qhedalvi Erkek Sneaker 0012404 Beyaz</div><div class="bar-track"><div class="bar-fill" style="width:100%;background:#2c77a3"></div></div><div class="bar-val">₺64,935.00</div></div><div class="bar-row"><div class="bar-rank">2</div><div class="bar-name" title="Riccon Kadın Sneaker 0012255 Beyaz Beyaz">Riccon Kadın Sneaker 0012255 Beyaz Beyaz</div><div class="bar-track"><div class="bar-fill" style="width:86%;background:#2c77a3"></div></div><div class="bar-val">₺55,707.00</div></div><div class="bar-row"><div class="bar-rank">3</div><div class="bar-name" title="Riccon Qhedalvi Erkek Sneaker 0012404 Siyah Beyaz">Riccon Qhedalvi Erkek Sneaker 0012404 Siyah Beyaz</div><div class="bar-track"><div class="bar-fill" style="width:66%;background:#3a8fc4"></div></div><div class="bar-val">₺42,957.00</div></div><div class="bar-row"><div class="bar-rank">4</div><div class="bar-name" title="Riccon Unisex Sneaker 0012072 Siyah">Riccon Unisex Sneaker 0012072 Siyah</div><div class="bar-track"><div class="bar-fill" style="width:64%;background:#3a8fc4"></div></div><div class="bar-val">₺41,548.00</div></div><div class="bar-row"><div class="bar-rank">5</div><div class="bar-name" title="Riccon Iohsevel Kadın Topuklu Ayakkabı 0012124 Mat Siyah">Riccon Iohsevel Kadın Topuklu Ayakkabı 0012124 Mat Siyah</div><div class="bar-track"><div class="bar-fill" style="width:58%;background:#4a9cc4"></div></div><div class="bar-val">₺37,440.00</div></div><div class="bar-row"><div class="bar-rank">6</div><div class="bar-name" title="Riccon Meshronei Kadın Sneaker 0012601 Beyaz">Riccon Meshronei Kadın Sneaker 0012601 Beyaz</div><div class="bar-track"><div class="bar-fill" style="width:57%;background:#4a9cc4"></div></div><div class="bar-val">₺37,006.20</div></div><div class="bar-row"><div class="bar-rank">7</div><div class="bar-name" title="Riccon Qhedalvi Erkek Sneaker 0012404 Siyah Siyah">Riccon Qhedalvi Erkek Sneaker 0012404 Siyah Siyah</div><div class="bar-track"><div class="bar-fill" style="width:52%;background:#5aaad4"></div></div><div class="bar-val">₺33,966.00</div></div><div class="bar-row"><div class="bar-rank">8</div><div class="bar-name" title="Riccon Gisesalia Kadın Topuklu Terlik 00120036 Siyah">Riccon Gisesalia Kadın Topuklu Terlik 00120036 Siyah</div><div class="bar-track"><div class="bar-fill" style="width:40%;background:#5aaad4"></div></div><div class="bar-val">₺25,968.80</div></div><div class="bar-row"><div class="bar-rank">9</div><div class="bar-name" title="Riccon Gisesalia Kadın Topuklu Terlik 00120036 Ten">Riccon Gisesalia Kadın Topuklu Terlik 00120036 Ten</div><div class="bar-track"><div class="bar-fill" style="width:39%;background:#6ab8d8"></div></div><div class="bar-val">₺25,469.40</div></div><div class="bar-row"><div class="bar-rank">10</div><div class="bar-name" title="Riccon Qhedalvi Erkek Sneaker 0012404 Taba">Riccon Qhedalvi Erkek Sneaker 0012404 Taba</div><div class="bar-track"><div class="bar-fill" style="width:38%;background:#6ab8d8"></div></div><div class="bar-val">₺24,975.00</div></div><div class="bar-row"><div class="bar-rank">11</div><div class="bar-name" title="Riccon Qhedalvi Erkek Sneaker 0012404 Kahverengi">Riccon Qhedalvi Erkek Sneaker 0012404 Kahverengi</div><div class="bar-track"><div class="bar-fill" style="width:37%;background:#7ac6dc"></div></div><div class="bar-val">₺23,976.00</div></div><div class="bar-row"><div class="bar-rank">12</div><div class="bar-name" title="Riccon Kadın İnce Topuklu Terlik 001251 Siyah Rustik">Riccon Kadın İnce Topuklu Terlik 001251 Siyah Rustik</div><div class="bar-track"><div class="bar-fill" style="width:37%;background:#7ac6dc"></div></div><div class="bar-val">₺23,821.20</div></div><div class="bar-row"><div class="bar-rank">13</div><div class="bar-name" title="Riccon Kadın İnce Topuklu Ayakkabı 001254 Kahverengi Rustik">Riccon Kadın İnce Topuklu Ayakkabı 001254 Kahverengi Rustik</div><div class="bar-track"><div class="bar-fill" style="width:37%;background:#8acfe0"></div></div><div class="bar-val">₺23,821.20</div></div><div class="bar-row"><div class="bar-rank">14</div><div class="bar-name" title="Riccon Iohsevel Kadın Topuklu Ayakkabı 0012124 Siyah Cilt">Riccon Iohsevel Kadın Topuklu Ayakkabı 0012124 Siyah Cilt</div><div class="bar-track"><div class="bar-fill" style="width:36%;background:#8acfe0"></div></div><div class="bar-val">₺23,616.00</div></div><div class="bar-row"><div class="bar-rank">15</div><div class="bar-name" title="Riccon Kadın Sivri Burunlu Arkası Açık İnce Topuklu Ayakkabı 0012200 Mat Ten">Riccon Kadın Sivri Burunlu Arkası Açık İnce Topuklu Ayakkabı 0012200 Mat Ten</div><div class="bar-track"><div class="bar-fill" style="width:34%;background:#9ad8e4"></div></div><div class="bar-val">₺22,291.50</div></div><div class="bar-row"><div class="bar-rank">16</div><div class="bar-name" title="Riccon Kadın Sneaker 0012140 Beyaz">Riccon Kadın Sneaker 0012140 Beyaz</div><div class="bar-track"><div class="bar-fill" style="width:34%;background:#9ad8e4"></div></div><div class="bar-val">₺22,092.00</div></div><div class="bar-row"><div class="bar-rank">17</div><div class="bar-name" title="Riccon Qhedalvi Erkek Sneaker 0012404 Lacivert">Riccon Qhedalvi Erkek Sneaker 0012404 Lacivert</div><div class="bar-track"><div class="bar-fill" style="width:34%;background:#aae0e8"></div></div><div class="bar-val">₺21,978.00</div></div><div class="bar-row"><div class="bar-rank">18</div><div class="bar-name" title="Riccon Unisex Sneaker 0012072 Buz Mor">Riccon Unisex Sneaker 0012072 Buz Mor</div><div class="bar-track"><div class="bar-fill" style="width:33%;background:#aae0e8"></div></div><div class="bar-val">₺21,573.00</div></div><div class="bar-row"><div class="bar-rank">19</div><div class="bar-name" title="Riccon Aanlarel Kadın Topuklu Ayakkabı 0012035 Bej">Riccon Aanlarel Kadın Topuklu Ayakkabı 0012035 Bej</div><div class="bar-track"><div class="bar-fill" style="width:33%;background:#bae8ec"></div></div><div class="bar-val">₺21,463.20</div></div><div class="bar-row"><div class="bar-rank">20</div><div class="bar-name" title="Riccon Kadın İnce Topuklu Ayakkabı 001254 Siyah Rustik">Riccon Kadın İnce Topuklu Ayakkabı 001254 Siyah Rustik</div><div class="bar-track"><div class="bar-fill" style="width:31%;background:#bae8ec"></div></div><div class="bar-val">₺20,156.40</div></div></div>
   </div>
 
-  <div class="charts-grid">
-    <div style="background:white;border-radius:10px;border:0.5px solid #cce0ee;padding:14px 16px;height:320px;display:flex;flex-direction:column;">
-      <div class="cc-title"><span>Platform harcama dağılımı</span></div>
-      <div class="pie-wrap">
-        <canvas id="pie_spend_last_30d" width="180" height="180"></canvas>
-      </div>
-      <div class="pie-legend">
-        <div style="display:flex;align-items:center;gap:5px"><div class="pie-dot" style="background:#1877f2"></div><div class="pie-label">Meta · ₺473,913.14</div></div>
-        <div style="display:flex;align-items:center;gap:5px"><div class="pie-dot" style="background:#ea4335"></div><div class="pie-label">Google · ₺39,570.64</div></div>
-      </div>
-    </div>
-    <div style="background:white;border-radius:10px;border:0.5px solid #cce0ee;padding:14px 16px;height:320px;display:flex;flex-direction:column;">
-      <div class="cc-title"><span>Platform dönüşüm geliri dağılımı</span></div>
-      <div class="pie-wrap">
-        <canvas id="pie_roas_last_30d" width="180" height="180"></canvas>
-      </div>
-      <div class="pie-legend">
-        <div style="display:flex;align-items:center;gap:5px"><div class="pie-dot" style="background:#1877f2"></div><div class="pie-label">Meta · ₺3,126,943.95</div></div>
-        <div style="display:flex;align-items:center;gap:5px"><div class="pie-dot" style="background:#ea4335"></div><div class="pie-label">Google · ₺807,598.26</div></div>
-      </div>
-    </div>
+  <div class="chart-card full" data-ico="saat">
+    <div class="cc-title"><span>Saatlik sipariş dağılımı</span></div>
+    <div class="hourly-box"><canvas id="hourly_chart_last_30d"></canvas></div>
   </div>
 
-  <div class="charts-grid">
-    <div style="background:white;border-radius:10px;border:0.5px solid #cce0ee;padding:14px 16px;height:320px;display:flex;flex-direction:column;">
-      <div class="cc-title"><span>Meta — En yüksek ROAS'lı reklamlar</span></div>
-      <div class="scroll-area" id="meta_ads_last_30d"></div>
-    </div>
-    <div style="background:white;border-radius:10px;border:0.5px solid #cce0ee;padding:14px 16px;height:320px;display:flex;flex-direction:column;">
-      <div class="cc-title"><span>Google — En yüksek ROAS'lı reklamlar</span></div>
-      <div class="scroll-area" id="google_ads_last_30d"></div>
-    </div>
+    <div class="plabel">Meta Ads — En iyi performanslı içerikler</div>
+  <div class="chart-card full icerik-kart" data-ico="reklam">
+    <div class="cc-title"><span>En iyi performanslı içerikler</span><span class="cc-count">10 gönderi · ROAS'a göre sıralı</span></div>
+    
+    <div class="icerik-liste"><div class="icerik-satir"><div class="ic-rank">1</div><div class="ic-gorsel"><img src="icerik/1720500852150771.jpg" alt="" loading="lazy"></div><div class="ic-metin"><div class="ic-aciklama" title="Yeni Sezon, Yeni Fırsatlar 🫶🏻
+⭐️ Net %40 İndirim
+⚡️ 2. Üründe %25 EK İndirim
+📦 Ücretsiz Kargo
+💳 Peşin Fiyatına 3 Taksit
+💫 Yeni Üyelere Özel %10 İndirim">Yeni Sezon, Yeni Fırsatlar 🫶🏻
+⭐️ Net %40 İndirim
+⚡️ 2. Üründe %25 EK İndirim
+📦 Ücretsiz Kargo
+💳 Peşin Fiyatına 3 Taksit
+💫 Yeni Üyelere Özel %10 İndirim</div></div><div class="ic-metrik"><span>Harcama</span><b>₺45.242,46</b></div><div class="ic-metrik"><span>Gelir</span><b>₺424.008,35</b></div><div class="ic-metrik vurgu"><span>ROAS</span><b>9,37x</b></div><div class="ic-metrik"><span>Tıklama Oranı</span><b>%6,19</b></div></div><div class="icerik-satir"><div class="ic-rank">2</div><div class="ic-gorsel"><img src="icerik/1445242377151491.jpg" alt="" loading="lazy"></div><div class="ic-metin"><div class="ic-aciklama" title="Gün Boyu Konfor!
+
+Qhedalvi Erkek Sneaker
+
+⚡️ 2. Üründe %25 EK İndirim
+📦 Ücretsiz Kargo
+💳 Peşin Fiyatına 3 Taksit">Gün Boyu Konfor!
+
+Qhedalvi Erkek Sneaker
+
+⚡️ 2. Üründe %25 EK İndirim
+📦 Ücretsiz Kargo
+💳 Peşin Fiyatına 3 Taksit</div><a class="ic-link" href="https://www.instagram.com/p/DU0I1P1DL5t/" target="_blank" rel="noopener">Instagram'da aç ↗</a></div><div class="ic-metrik"><span>Harcama</span><b>₺517,94</b></div><div class="ic-metrik"><span>Gelir</span><b>₺4.769,50</b></div><div class="ic-metrik vurgu"><span>ROAS</span><b>9,21x</b></div><div class="ic-metrik"><span>Tıklama Oranı</span><b>%2,24</b></div></div><div class="icerik-satir"><div class="ic-rank">3</div><div class="ic-gorsel"><img src="icerik/26247781481540357.jpg" alt="" loading="lazy"></div><div class="ic-metin"><div class="ic-aciklama" title="Modern &amp; Estetik !
+
+Iarwarin Kadın Kısa Topuklu Ayakkabı
+
+⚡️ 2. Üründe %25 EK İndirim
+📦 Ücretsiz Kargo
+💳 Peşin Fiyatına 3 Taksit">Modern &amp; Estetik !
+
+Iarwarin Kadın Kısa Topuklu Ayakkabı
+
+⚡️ 2. Üründe %25 EK İndirim
+📦 Ücretsiz Kargo
+💳 Peşin Fiyatına 3 Taksit</div><a class="ic-link" href="https://www.instagram.com/p/DWV744CjKcc/" target="_blank" rel="noopener">Instagram'da aç ↗</a></div><div class="ic-metrik"><span>Harcama</span><b>₺21.944,99</b></div><div class="ic-metrik"><span>Gelir</span><b>₺172.607,40</b></div><div class="ic-metrik vurgu"><span>ROAS</span><b>7,87x</b></div><div class="ic-metrik"><span>Tıklama Oranı</span><b>%5,46</b></div></div><div class="icerik-satir"><div class="ic-rank">4</div><div class="ic-gorsel"><img src="icerik/2052444492285698.jpg" alt="" loading="lazy"></div><div class="ic-metin"><div class="ic-aciklama" title="Yeni sezonda trendler dolabında  💫
+En iyi fiyat avantajı ❤️">Yeni sezonda trendler dolabında  💫
+En iyi fiyat avantajı ❤️</div></div><div class="ic-metrik"><span>Harcama</span><b>₺30.693,08</b></div><div class="ic-metrik"><span>Gelir</span><b>₺241.226,99</b></div><div class="ic-metrik vurgu"><span>ROAS</span><b>7,86x</b></div><div class="ic-metrik"><span>Tıklama Oranı</span><b>%7,62</b></div></div><div class="icerik-satir"><div class="ic-rank">5</div><div class="ic-gorsel"><img src="icerik/1424003332550699.jpg" alt="" loading="lazy"></div><div class="ic-metin"><div class="ic-aciklama" title="Rahat tasarım rahat ayaklar🧡
+
+Ürün Kodu: 0012159 Ekru
+
+⭐️ Net %40 İndirim
+⚡️ 2. Üründe %25 EK İndirim
+📦 Ücretsiz Kargo
+💳 Peşin Fiyatına 3 Taksit">Rahat tasarım rahat ayaklar🧡
+
+Ürün Kodu: 0012159 Ekru
+
+⭐️ Net %40 İndirim
+⚡️ 2. Üründe %25 EK İndirim
+📦 Ücretsiz Kargo
+💳 Peşin Fiyatına 3 Taksit</div><a class="ic-link" href="https://www.instagram.com/p/DIdbTMAMbFC/" target="_blank" rel="noopener">Instagram'da aç ↗</a></div><div class="ic-metrik"><span>Harcama</span><b>₺19.647,37</b></div><div class="ic-metrik"><span>Gelir</span><b>₺152.693,71</b></div><div class="ic-metrik vurgu"><span>ROAS</span><b>7,77x</b></div><div class="ic-metrik"><span>Tıklama Oranı</span><b>%3,65</b></div></div><div class="icerik-satir"><div class="ic-rank">6</div><div class="ic-gorsel"><img src="icerik/669569412154163.jpg" alt="" loading="lazy"></div><div class="ic-metin"><div class="ic-aciklama" title="Simsiyah🖤 Sezon Sonuna Özel 449TL 💎
+
+Ürün Kodu: 0012124 Mat Siyah
+
+⚡️ 2. Üründe %25 EK İndirim
+📦 Ücretsiz Kargo
+💳 Peşin Fiyatına 3 Taksit">Simsiyah🖤 Sezon Sonuna Özel 449TL 💎
+
+Ürün Kodu: 0012124 Mat Siyah
+
+⚡️ 2. Üründe %25 EK İndirim
+📦 Ücretsiz Kargo
+💳 Peşin Fiyatına 3 Taksit</div><a class="ic-link" href="https://www.instagram.com/p/DIdXQQpMuqU/" target="_blank" rel="noopener">Instagram'da aç ↗</a></div><div class="ic-metrik"><span>Harcama</span><b>₺29.067,33</b></div><div class="ic-metrik"><span>Gelir</span><b>₺214.881,23</b></div><div class="ic-metrik vurgu"><span>ROAS</span><b>7,39x</b></div><div class="ic-metrik"><span>Tıklama Oranı</span><b>%5,08</b></div></div><div class="icerik-satir"><div class="ic-rank">7</div><div class="ic-gorsel"><img src="icerik/4023705667919402.jpg" alt="" loading="lazy"></div><div class="ic-metin"><div class="ic-aciklama" title="Fırsatları Kaçırma ⚡️
+⚡️ 2. Üründe %25 EK İndirim
+📦 Ücretsiz Kargo
+💳 Peşin Fiyatına 3 Taksit
+www.riccon.com.tr">Fırsatları Kaçırma ⚡️
+⚡️ 2. Üründe %25 EK İndirim
+📦 Ücretsiz Kargo
+💳 Peşin Fiyatına 3 Taksit
+www.riccon.com.tr</div><a class="ic-link" href="https://www.instagram.com/p/DdEQ-CcMUCy/" target="_blank" rel="noopener">Instagram'da aç ↗</a></div><div class="ic-metrik"><span>Harcama</span><b>₺8.853,66</b></div><div class="ic-metrik"><span>Gelir</span><b>₺60.933,30</b></div><div class="ic-metrik vurgu"><span>ROAS</span><b>6,88x</b></div><div class="ic-metrik"><span>Tıklama Oranı</span><b>%8,30</b></div></div><div class="icerik-satir"><div class="ic-rank">8</div><div class="ic-gorsel"><img src="icerik/2104419353368452.jpg" alt="" loading="lazy"></div><div class="ic-metin"><div class="ic-aciklama" title="Riccon’da Seni Bekleyen İndirimler Var ⚡️
+Sepetindeki Ürünleri Unutma 😉
+www.riccon.com.tr">Riccon’da Seni Bekleyen İndirimler Var ⚡️
+Sepetindeki Ürünleri Unutma 😉
+www.riccon.com.tr</div></div><div class="ic-metrik"><span>Harcama</span><b>₺22.589,47</b></div><div class="ic-metrik"><span>Gelir</span><b>₺153.904,59</b></div><div class="ic-metrik vurgu"><span>ROAS</span><b>6,81x</b></div><div class="ic-metrik"><span>Tıklama Oranı</span><b>%7,35</b></div></div><div class="icerik-satir"><div class="ic-rank">9</div><div class="ic-gorsel"><img src="icerik/9647215438712453.jpg" alt="" loading="lazy"></div><div class="ic-metin"><div class="ic-aciklama" title="Rahatlığın Ötesinde👟🤍
+
+Ürün Kodu: 0012404Beyaz
+
+⚡️ 2. Üründe %25 EK İndirim
+📦 Ücretsiz Kargo
+💳 Peşin Fiyatına 3 Taksit">Rahatlığın Ötesinde👟🤍
+
+Ürün Kodu: 0012404Beyaz
+
+⚡️ 2. Üründe %25 EK İndirim
+📦 Ücretsiz Kargo
+💳 Peşin Fiyatına 3 Taksit</div><a class="ic-link" href="https://www.instagram.com/p/DGvBPlKM58u/" target="_blank" rel="noopener">Instagram'da aç ↗</a></div><div class="ic-metrik"><span>Harcama</span><b>₺19.679,20</b></div><div class="ic-metrik"><span>Gelir</span><b>₺129.911,04</b></div><div class="ic-metrik vurgu"><span>ROAS</span><b>6,60x</b></div><div class="ic-metrik"><span>Tıklama Oranı</span><b>%3,86</b></div></div><div class="icerik-satir"><div class="ic-rank">10</div><div class="ic-gorsel"><img src="icerik/1316776153227908.jpg" alt="" loading="lazy"></div><div class="ic-metin"><div class="ic-aciklama" title="Sepetinde Unuttuğun Ürünlere Özel 🙃
+Tüm İndirimlere EK 100TL İndirim Fırsatı
+İndirim Kodu: RC100 
+
+⭐️ Net %40 İndirim
+⚡️ 2. Üründe %25 EK İndirim
+📦 Ücretsiz Kargo
+💳 Peşin Fiyatına 3 Taksit
+
+&#x27;1000TL ve Üzeri Alışverişlerde Geçerlidir&#x27; ❤️">Sepetinde Unuttuğun Ürünlere Özel 🙃
+Tüm İndirimlere EK 100TL İndirim Fırsatı
+İndirim Kodu: RC100 
+
+⭐️ Net %40 İndirim
+⚡️ 2. Üründe %25 EK İndirim
+📦 Ücretsiz Kargo
+💳 Peşin Fiyatına 3 Taksit
+
+&#x27;1000TL ve Üzeri Alışverişlerde Geçerlidir&#x27; ❤️</div><a class="ic-link" href="https://www.instagram.com/p/DdEQCi7Mh4Z/" target="_blank" rel="noopener">Instagram'da aç ↗</a></div><div class="ic-metrik"><span>Harcama</span><b>₺32.718,14</b></div><div class="ic-metrik"><span>Gelir</span><b>₺214.115,79</b></div><div class="ic-metrik vurgu"><span>ROAS</span><b>6,54x</b></div><div class="ic-metrik"><span>Tıklama Oranı</span><b>%4,02</b></div></div></div>
   </div>
 
 </div>
@@ -524,8 +987,8 @@ body{background:#f0f6fb;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',
 <script>
 (function(){
   var labels = ['00:00', '01:00', '02:00', '03:00', '04:00', '05:00', '06:00', '07:00', '08:00', '09:00', '10:00', '11:00', '12:00', '13:00', '14:00', '15:00', '16:00', '17:00', '18:00', '19:00', '20:00', '21:00', '22:00', '23:00'];
-  var counts = [275, 264, 221, 198, 107, 64, 36, 26, 17, 22, 49, 82, 118, 184, 247, 261, 284, 246, 266, 233, 208, 209, 222, 237];
-  var revenues = [219478.15, 224398.63, 182488.82, 159846.14, 95904.64, 53020.73, 28030.87, 19904.95, 13726.83, 18411.59, 37992.97, 72165.23, 99958.83, 165947.88, 205991.72, 222394.26, 243985.45, 210033.56, 218857.31, 202870.61, 169335.38, 175809.57, 192850.91, 194140.26];
+  var counts = [198, 107, 64, 36, 26, 17, 22, 49, 82, 118, 184, 247, 261, 284, 246, 266, 233, 208, 209, 222, 237, 275, 264, 221];
+  var revenues = [159846.14, 95904.64, 53020.73, 28030.87, 19904.95, 13726.83, 18411.59, 37992.97, 72165.23, 99958.83, 165947.88, 205991.72, 222394.26, 243985.45, 210033.56, 218857.31, 202870.61, 169335.38, 175809.57, 192850.91, 194140.26, 219478.15, 224398.63, 182488.82];
   window.addEventListener('load', function(){
     var ctx = document.getElementById('hourly_chart_last_30d');
     if(!ctx) return;
@@ -571,115 +1034,172 @@ body{background:#f0f6fb;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',
 <div id="period-this_month" class="period-content ">
 <div class="wrap">
 
+  <div class="kars-not"><span class="kars-tag">Karşılaştırma</span><span><b>01.09.2026 — 10.09.2026</b> (10 gün) &nbsp;·&nbsp; önceki dönem: <b>22.08.2026 — 31.08.2026</b></span></div>
   <div class="plabel">Genel Özet</div>
   <div class="summary-grid">
-    <div class="scard">
+    <div class="scard" data-ico="harcama">
       <div class="scard-label">Toplam Harcama</div>
-      <div class="scard-value">₺167,500.82</div>
-      <div class="scard-sub neutral">—</div>
+      <div class="scard-value">₺168,966.28</div>
+      <div class="scard-sub neutral" title="Önceki dönem: ₺159.975,36">▲ %5,6</div>
     </div>
-    <div class="scard green">
+    <div class="scard green" data-ico="gelir">
       <div class="scard-label">Toplam Gelir</div>
       <div class="scard-value">₺1,057,328.47</div>
-      <div class="scard-sub neutral">—</div>
+      <div class="scard-sub down" title="Önceki dönem: ₺1.096.068,63">▼ %3,5</div>
     </div>
-    <div class="scard orange">
+    <div class="scard orange" data-ico="roas">
       <div class="scard-label">Toplam ROAS</div>
-      <div class="scard-value">6.31x</div>
-      <div class="scard-sub neutral">—</div>
+      <div class="scard-value">6.26x</div>
+      <div class="scard-sub down" title="Önceki dönem: 6,85x">▼ %8,6</div>
     </div>
-    <div class="scard purple">
+    <div class="scard purple" data-ico="siparis">
       <div class="scard-label">Toplam Sipariş</div>
       <div class="scard-value">1210</div>
-      <div class="scard-sub neutral">—</div>
+      <div class="scard-sub down" title="Önceki dönem: 1.292">▼ %6,3</div>
     </div>
   </div>
 
   <div class="plabel">Meta Ads</div>
   <div class="platform-block">
-    <div class="pb-header"><div class="pb-name">Meta Ads</div></div>
+    <div class="pb-header"><div class="pb-icon"><img src="logos/meta-ads-logo.png" alt="Meta"></div><div class="pb-name">Meta Ads</div></div>
     <div class="metrics-row" style="grid-template-columns:repeat(6,1fr)">
-      <div class="mc"><div class="mc-label">Harcama</div><div class="mc-value">₺152,784.50</div><div class="mc-change neutral">—</div></div>
-      <div class="mc"><div class="mc-label">Alışveriş</div><div class="mc-value">1013</div><div class="mc-change neutral">—</div></div>
-      <div class="mc"><div class="mc-label">ROAS</div><div class="mc-value">6.51x</div><div class="mc-change neutral">—</div></div>
-      <div class="mc"><div class="mc-label">CPC</div><div class="mc-value">₺1.72</div><div class="mc-change neutral">—</div></div>
-      <div class="mc"><div class="mc-label">CTR</div><div class="mc-value">%5.53</div><div class="mc-change neutral">—</div></div>
-      <div class="mc"><div class="mc-label">CPM</div><div class="mc-value">₺94.99</div><div class="mc-change neutral">—</div></div>
+      <div class="mc" data-ico="harcama"><div class="mc-label">Harcama</div><div class="mc-value">₺154,104.86</div><div class="mc-change neutral" title="Önceki dönem: ₺148.129,90">▲ %4,0</div></div>
+      <div class="mc" data-ico="sepet"><div class="mc-label">Alışveriş</div><div class="mc-value">1031</div><div class="mc-change down" title="Önceki dönem: 1.038">▼ %0,7</div></div>
+      <div class="mc" data-ico="roas"><div class="mc-label">ROAS</div><div class="mc-value">6.59x</div><div class="mc-change down" title="Önceki dönem: 6,81x">▼ %3,2</div></div>
+      <div class="mc" data-ico="tiklama"><div class="mc-label">CPC</div><div class="mc-value">₺1.72</div><div class="mc-change down" title="Önceki dönem: ₺1,54">▲ %11,6</div></div>
+      <div class="mc" data-ico="oran"><div class="mc-label">CTR</div><div class="mc-value">%5.54</div><div class="mc-change down" title="Önceki dönem: %6,08">▼ %8,9</div></div>
+      <div class="mc" data-ico="gosterim"><div class="mc-label">CPM</div><div class="mc-value">₺95.06</div><div class="mc-change down" title="Önceki dönem: ₺93,75">▲ %1,4</div></div>
     </div>
   </div>
 
   <div class="plabel">Google Ads</div>
   <div class="platform-block">
-    <div class="pb-header"><div class="pb-name">Google Ads</div></div>
+    <div class="pb-header"><div class="pb-icon"><img src="logos/google-ads-logo.png" alt="Google Ads"></div><div class="pb-name">Google Ads</div></div>
     <div class="metrics-row" style="grid-template-columns:repeat(6,1fr)">
-      <div class="mc"><div class="mc-label">Harcama</div><div class="mc-value">₺14,716.32</div><div class="mc-change neutral">—</div></div>
-      <div class="mc"><div class="mc-label">Dönüşüm</div><div class="mc-value">177</div><div class="mc-change neutral">—</div></div>
-      <div class="mc"><div class="mc-label">ROAS</div><div class="mc-value">14.92x</div><div class="mc-change neutral">—</div></div>
-      <div class="mc"><div class="mc-label">TBM</div><div class="mc-value">₺4.06</div><div class="mc-change neutral">—</div></div>
-      <div class="mc"><div class="mc-label">Tıklama Oranı</div><div class="mc-value">%3.88</div><div class="mc-change neutral">—</div></div>
-      <div class="mc"><div class="mc-label">BGBM</div><div class="mc-value">₺157.7</div><div class="mc-change neutral">—</div></div>
+      <div class="mc" data-ico="harcama"><div class="mc-label">Harcama</div><div class="mc-value">₺14,861.42</div><div class="mc-change neutral" title="Önceki dönem: ₺11.845,46">▲ %25,5</div></div>
+      <div class="mc" data-ico="donusum"><div class="mc-label">Dönüşüm</div><div class="mc-value">178</div><div class="mc-change down" title="Önceki dönem: 222">▼ %19,7</div></div>
+      <div class="mc" data-ico="roas"><div class="mc-label">ROAS</div><div class="mc-value">14.81x</div><div class="mc-change down" title="Önceki dönem: 22,03x">▼ %32,8</div></div>
+      <div class="mc" data-ico="tiklama"><div class="mc-label">TBM</div><div class="mc-value">₺4.07</div><div class="mc-change down" title="Önceki dönem: ₺3,73">▲ %9,2</div></div>
+      <div class="mc" data-ico="oran"><div class="mc-label">Tıklama Oranı</div><div class="mc-value">%3.86</div><div class="mc-change down" title="Önceki dönem: %5,53">▼ %30,3</div></div>
+      <div class="mc" data-ico="gosterim"><div class="mc-label">BGBM</div><div class="mc-value">₺156.8</div><div class="mc-change up" title="Önceki dönem: ₺206,30">▼ %24,0</div></div>
     </div>
   </div>
 
   <div class="plabel">Shopify</div>
   <div class="platform-block">
-    <div class="pb-header"><div class="pb-name">Shopify</div></div>
-    <div class="metrics-row" style="grid-template-columns:repeat(5,1fr)">
-      <div class="mc"><div class="mc-label">Gelir</div><div class="mc-value">₺1,057,328.47</div><div class="mc-change neutral">—</div></div>
-      <div class="mc"><div class="mc-label">Toplam ROAS</div><div class="mc-value">6.31x</div><div class="mc-change neutral">—</div></div>
-      <div class="mc"><div class="mc-label">Ort. Sepet</div><div class="mc-value">₺873.83</div><div class="mc-change neutral">—</div></div>
-      <div class="mc"><div class="mc-label">Sipariş</div><div class="mc-value">1210</div><div class="mc-change neutral">—</div></div>
+    <div class="pb-header"><div class="pb-icon"><img src="logos/shopify-logo.png" alt="Shopify"></div><div class="pb-name">Shopify</div></div>
+    <div class="metrics-row" style="grid-template-columns:repeat(4,1fr)">
+      <div class="mc" data-ico="gelir"><div class="mc-label">Gelir</div><div class="mc-value">₺1,057,328.47</div><div class="mc-change down" title="Önceki dönem: ₺1.096.068,63">▼ %3,5</div></div>
+      <div class="mc" data-ico="roas"><div class="mc-label">Toplam ROAS</div><div class="mc-value">6.26x</div><div class="mc-change down" title="Önceki dönem: 6,85x">▼ %8,6</div></div>
+      <div class="mc" data-ico="sepet"><div class="mc-label">Ort. Sepet</div><div class="mc-value">₺873.83</div><div class="mc-change up" title="Önceki dönem: ₺848,35">▲ %3,0</div></div>
+      <div class="mc" data-ico="siparis"><div class="mc-label">Sipariş</div><div class="mc-value">1210</div><div class="mc-change down" title="Önceki dönem: 1.292">▼ %6,3</div></div>
 
     </div>
   </div>
 
   <div class="plabel">Analizler</div>
 
-  <div class="charts-grid">
-    <div style="background:white;border-radius:10px;border:0.5px solid #cce0ee;padding:14px 16px;height:320px;display:flex;flex-direction:column;">
-      <div class="cc-title"><span>En çok satan ürünler</span><span class="cc-count">20 ürün</span></div>
-      <div class="scroll-area"><div class="bar-row"><div class="bar-rank">1</div><div class="bar-name">Riccon Qhedalvi Erkek Sneaker 0012404 Beyaz</div><div class="bar-track"><div class="bar-fill" style="width:100%;background:#2c77a3"></div></div><div class="bar-val">₺28,971.00</div></div><div class="bar-row"><div class="bar-rank">2</div><div class="bar-name">Riccon Kadın Sneaker 0012255 Beyaz Beyaz</div><div class="bar-track"><div class="bar-fill" style="width:89%;background:#2c77a3"></div></div><div class="bar-val">₺25,757.00</div></div><div class="bar-row"><div class="bar-rank">3</div><div class="bar-name">Riccon Qhedalvi Erkek Sneaker 0012404 Siyah Siyah</div><div class="bar-track"><div class="bar-fill" style="width:76%;background:#3a8fc4"></div></div><div class="bar-val">₺21,978.00</div></div><div class="bar-row"><div class="bar-rank">4</div><div class="bar-name">Riccon Qhedalvi Erkek Sneaker 0012404 Siyah Beyaz</div><div class="bar-track"><div class="bar-fill" style="width:69%;background:#3a8fc4"></div></div><div class="bar-val">₺19,980.00</div></div><div class="bar-row"><div class="bar-rank">5</div><div class="bar-name">Riccon Iohsevel Kadın Topuklu Ayakkabı 0012124 Mat Siyah</div><div class="bar-track"><div class="bar-fill" style="width:54%;background:#4a9cc4"></div></div><div class="bar-val">₺15,552.00</div></div><div class="bar-row"><div class="bar-rank">6</div><div class="bar-name">Riccon Unisex Sneaker 0012072 Siyah</div><div class="bar-track"><div class="bar-fill" style="width:44%;background:#4a9cc4"></div></div><div class="bar-val">₺12,784.00</div></div><div class="bar-row"><div class="bar-rank">7</div><div class="bar-name">Riccon Meshronei Kadın Sneaker 0012601 Beyaz</div><div class="bar-track"><div class="bar-fill" style="width:41%;background:#5aaad4"></div></div><div class="bar-val">₺11,748.00</div></div><div class="bar-row"><div class="bar-rank">8</div><div class="bar-name">Riccon Kadın Çizme 0012360 Siyah Cilt</div><div class="bar-track"><div class="bar-fill" style="width:31%;background:#5aaad4"></div></div><div class="bar-val">₺8,993.00</div></div><div class="bar-row"><div class="bar-rank">9</div><div class="bar-name">Riccon Kadın İnce Topuklu Ayakkabı 001254 Siyah Rustik</div><div class="bar-track"><div class="bar-fill" style="width:30%;background:#6ab8d8"></div></div><div class="bar-val">₺8,551.20</div></div><div class="bar-row"><div class="bar-rank">10</div><div class="bar-name">Riccon Iohsevel Kadın Topuklu Ayakkabı 0012124 Mat Ten</div><div class="bar-track"><div class="bar-fill" style="width:28%;background:#6ab8d8"></div></div><div class="bar-val">₺8,064.00</div></div><div class="bar-row"><div class="bar-rank">11</div><div class="bar-name">Riccon Hilnaril Kadın Sivri Topuklu Çizme 00123000 Siyah Cilt</div><div class="bar-track"><div class="bar-fill" style="width:27%;background:#7ac6dc"></div></div><div class="bar-val">₺7,807.41</div></div><div class="bar-row"><div class="bar-rank">12</div><div class="bar-name">Riccon Rosatora Kadın Sneaker 001210 Bej Taba</div><div class="bar-track"><div class="bar-fill" style="width:27%;background:#7ac6dc"></div></div><div class="bar-val">₺7,731.90</div></div><div class="bar-row"><div class="bar-rank">13</div><div class="bar-name">Riccon Gisesalia Kadın Topuklu Terlik 00120036 Siyah</div><div class="bar-track"><div class="bar-fill" style="width:26%;background:#8acfe0"></div></div><div class="bar-val">₺7,491.00</div></div><div class="bar-row"><div class="bar-rank">14</div><div class="bar-name">Riccon Erkek Sneaker 0012X20 Siyah Beyaz</div><div class="bar-track"><div class="bar-fill" style="width:25%;background:#8acfe0"></div></div><div class="bar-val">₺7,191.00</div></div><div class="bar-row"><div class="bar-rank">15</div><div class="bar-name">Riccon Rosatora Kadın Sneaker 001210 Siyah Füme</div><div class="bar-track"><div class="bar-fill" style="width:24%;background:#9ad8e4"></div></div><div class="bar-val">₺7,029.00</div></div><div class="bar-row"><div class="bar-rank">16</div><div class="bar-name">Riccon Rosatora Kadın Sneaker 001210 Buz Somon</div><div class="bar-track"><div class="bar-fill" style="width:24%;background:#9ad8e4"></div></div><div class="bar-val">₺7,029.00</div></div><div class="bar-row"><div class="bar-rank">17</div><div class="bar-name">Riccon Iohsevel Kadın Topuklu Ayakkabı 0012124 Siyah Cilt</div><div class="bar-track"><div class="bar-fill" style="width:24%;background:#aae0e8"></div></div><div class="bar-val">₺6,912.00</div></div><div class="bar-row"><div class="bar-rank">18</div><div class="bar-name">Riccon Unisex Sneaker 12020 Siyah Beyaz</div><div class="bar-track"><div class="bar-fill" style="width:23%;background:#aae0e8"></div></div><div class="bar-val">₺6,688.00</div></div><div class="bar-row"><div class="bar-rank">19</div><div class="bar-name">Riccon Saelheira Kadın Babet 0012250 Siyah Cilt</div><div class="bar-track"><div class="bar-fill" style="width:22%;background:#bae8ec"></div></div><div class="bar-val">₺6,490.00</div></div><div class="bar-row"><div class="bar-rank">20</div><div class="bar-name">Riccon Kadın Sivri Burunlu Arkası Açık İnce Topuklu Ayakkabı 0012753 Damla Taşlı Ten</div><div class="bar-track"><div class="bar-fill" style="width:22%;background:#bae8ec"></div></div><div class="bar-val">₺6,369.00</div></div></div>
-    </div>
-    <div style="background:white;border-radius:10px;border:0.5px solid #cce0ee;padding:14px 16px;height:320px;display:flex;flex-direction:column;">
-      <div class="cc-title"><span>Saatlik sipariş dağılımı</span></div>
-      <div style="flex:1;min-height:0;position:relative;">
-        <canvas id="hourly_chart_this_month" style="max-height:240px;"></canvas>
-      </div>
-    </div>
+  <div class="chart-card full" data-ico="urun">
+    <div class="cc-title"><span>En çok satan ürünler</span><span class="cc-count">20 ürün</span></div>
+    <div class="scroll-area"><div class="bar-row"><div class="bar-rank">1</div><div class="bar-name" title="Riccon Qhedalvi Erkek Sneaker 0012404 Beyaz">Riccon Qhedalvi Erkek Sneaker 0012404 Beyaz</div><div class="bar-track"><div class="bar-fill" style="width:100%;background:#2c77a3"></div></div><div class="bar-val">₺28,971.00</div></div><div class="bar-row"><div class="bar-rank">2</div><div class="bar-name" title="Riccon Kadın Sneaker 0012255 Beyaz Beyaz">Riccon Kadın Sneaker 0012255 Beyaz Beyaz</div><div class="bar-track"><div class="bar-fill" style="width:89%;background:#2c77a3"></div></div><div class="bar-val">₺25,757.00</div></div><div class="bar-row"><div class="bar-rank">3</div><div class="bar-name" title="Riccon Qhedalvi Erkek Sneaker 0012404 Siyah Siyah">Riccon Qhedalvi Erkek Sneaker 0012404 Siyah Siyah</div><div class="bar-track"><div class="bar-fill" style="width:76%;background:#3a8fc4"></div></div><div class="bar-val">₺21,978.00</div></div><div class="bar-row"><div class="bar-rank">4</div><div class="bar-name" title="Riccon Qhedalvi Erkek Sneaker 0012404 Siyah Beyaz">Riccon Qhedalvi Erkek Sneaker 0012404 Siyah Beyaz</div><div class="bar-track"><div class="bar-fill" style="width:69%;background:#3a8fc4"></div></div><div class="bar-val">₺19,980.00</div></div><div class="bar-row"><div class="bar-rank">5</div><div class="bar-name" title="Riccon Iohsevel Kadın Topuklu Ayakkabı 0012124 Mat Siyah">Riccon Iohsevel Kadın Topuklu Ayakkabı 0012124 Mat Siyah</div><div class="bar-track"><div class="bar-fill" style="width:54%;background:#4a9cc4"></div></div><div class="bar-val">₺15,552.00</div></div><div class="bar-row"><div class="bar-rank">6</div><div class="bar-name" title="Riccon Unisex Sneaker 0012072 Siyah">Riccon Unisex Sneaker 0012072 Siyah</div><div class="bar-track"><div class="bar-fill" style="width:44%;background:#4a9cc4"></div></div><div class="bar-val">₺12,784.00</div></div><div class="bar-row"><div class="bar-rank">7</div><div class="bar-name" title="Riccon Meshronei Kadın Sneaker 0012601 Beyaz">Riccon Meshronei Kadın Sneaker 0012601 Beyaz</div><div class="bar-track"><div class="bar-fill" style="width:41%;background:#5aaad4"></div></div><div class="bar-val">₺11,748.00</div></div><div class="bar-row"><div class="bar-rank">8</div><div class="bar-name" title="Riccon Kadın Çizme 0012360 Siyah Cilt">Riccon Kadın Çizme 0012360 Siyah Cilt</div><div class="bar-track"><div class="bar-fill" style="width:31%;background:#5aaad4"></div></div><div class="bar-val">₺8,993.00</div></div><div class="bar-row"><div class="bar-rank">9</div><div class="bar-name" title="Riccon Kadın İnce Topuklu Ayakkabı 001254 Siyah Rustik">Riccon Kadın İnce Topuklu Ayakkabı 001254 Siyah Rustik</div><div class="bar-track"><div class="bar-fill" style="width:30%;background:#6ab8d8"></div></div><div class="bar-val">₺8,551.20</div></div><div class="bar-row"><div class="bar-rank">10</div><div class="bar-name" title="Riccon Iohsevel Kadın Topuklu Ayakkabı 0012124 Mat Ten">Riccon Iohsevel Kadın Topuklu Ayakkabı 0012124 Mat Ten</div><div class="bar-track"><div class="bar-fill" style="width:28%;background:#6ab8d8"></div></div><div class="bar-val">₺8,064.00</div></div><div class="bar-row"><div class="bar-rank">11</div><div class="bar-name" title="Riccon Hilnaril Kadın Sivri Topuklu Çizme 00123000 Siyah Cilt">Riccon Hilnaril Kadın Sivri Topuklu Çizme 00123000 Siyah Cilt</div><div class="bar-track"><div class="bar-fill" style="width:27%;background:#7ac6dc"></div></div><div class="bar-val">₺7,807.41</div></div><div class="bar-row"><div class="bar-rank">12</div><div class="bar-name" title="Riccon Rosatora Kadın Sneaker 001210 Bej Taba">Riccon Rosatora Kadın Sneaker 001210 Bej Taba</div><div class="bar-track"><div class="bar-fill" style="width:27%;background:#7ac6dc"></div></div><div class="bar-val">₺7,731.90</div></div><div class="bar-row"><div class="bar-rank">13</div><div class="bar-name" title="Riccon Gisesalia Kadın Topuklu Terlik 00120036 Siyah">Riccon Gisesalia Kadın Topuklu Terlik 00120036 Siyah</div><div class="bar-track"><div class="bar-fill" style="width:26%;background:#8acfe0"></div></div><div class="bar-val">₺7,491.00</div></div><div class="bar-row"><div class="bar-rank">14</div><div class="bar-name" title="Riccon Erkek Sneaker 0012X20 Siyah Beyaz">Riccon Erkek Sneaker 0012X20 Siyah Beyaz</div><div class="bar-track"><div class="bar-fill" style="width:25%;background:#8acfe0"></div></div><div class="bar-val">₺7,191.00</div></div><div class="bar-row"><div class="bar-rank">15</div><div class="bar-name" title="Riccon Rosatora Kadın Sneaker 001210 Siyah Füme">Riccon Rosatora Kadın Sneaker 001210 Siyah Füme</div><div class="bar-track"><div class="bar-fill" style="width:24%;background:#9ad8e4"></div></div><div class="bar-val">₺7,029.00</div></div><div class="bar-row"><div class="bar-rank">16</div><div class="bar-name" title="Riccon Rosatora Kadın Sneaker 001210 Buz Somon">Riccon Rosatora Kadın Sneaker 001210 Buz Somon</div><div class="bar-track"><div class="bar-fill" style="width:24%;background:#9ad8e4"></div></div><div class="bar-val">₺7,029.00</div></div><div class="bar-row"><div class="bar-rank">17</div><div class="bar-name" title="Riccon Iohsevel Kadın Topuklu Ayakkabı 0012124 Siyah Cilt">Riccon Iohsevel Kadın Topuklu Ayakkabı 0012124 Siyah Cilt</div><div class="bar-track"><div class="bar-fill" style="width:24%;background:#aae0e8"></div></div><div class="bar-val">₺6,912.00</div></div><div class="bar-row"><div class="bar-rank">18</div><div class="bar-name" title="Riccon Unisex Sneaker 12020 Siyah Beyaz">Riccon Unisex Sneaker 12020 Siyah Beyaz</div><div class="bar-track"><div class="bar-fill" style="width:23%;background:#aae0e8"></div></div><div class="bar-val">₺6,688.00</div></div><div class="bar-row"><div class="bar-rank">19</div><div class="bar-name" title="Riccon Saelheira Kadın Babet 0012250 Siyah Cilt">Riccon Saelheira Kadın Babet 0012250 Siyah Cilt</div><div class="bar-track"><div class="bar-fill" style="width:22%;background:#bae8ec"></div></div><div class="bar-val">₺6,490.00</div></div><div class="bar-row"><div class="bar-rank">20</div><div class="bar-name" title="Riccon Kadın Sivri Burunlu Arkası Açık İnce Topuklu Ayakkabı 0012753 Damla Taşlı Ten">Riccon Kadın Sivri Burunlu Arkası Açık İnce Topuklu Ayakkabı 0012753 Damla Taşlı Ten</div><div class="bar-track"><div class="bar-fill" style="width:22%;background:#bae8ec"></div></div><div class="bar-val">₺6,369.00</div></div></div>
   </div>
 
-  <div class="charts-grid">
-    <div style="background:white;border-radius:10px;border:0.5px solid #cce0ee;padding:14px 16px;height:320px;display:flex;flex-direction:column;">
-      <div class="cc-title"><span>Platform harcama dağılımı</span></div>
-      <div class="pie-wrap">
-        <canvas id="pie_spend_this_month" width="180" height="180"></canvas>
-      </div>
-      <div class="pie-legend">
-        <div style="display:flex;align-items:center;gap:5px"><div class="pie-dot" style="background:#1877f2"></div><div class="pie-label">Meta · ₺152,784.50</div></div>
-        <div style="display:flex;align-items:center;gap:5px"><div class="pie-dot" style="background:#ea4335"></div><div class="pie-label">Google · ₺14,716.32</div></div>
-      </div>
-    </div>
-    <div style="background:white;border-radius:10px;border:0.5px solid #cce0ee;padding:14px 16px;height:320px;display:flex;flex-direction:column;">
-      <div class="cc-title"><span>Platform dönüşüm geliri dağılımı</span></div>
-      <div class="pie-wrap">
-        <canvas id="pie_roas_this_month" width="180" height="180"></canvas>
-      </div>
-      <div class="pie-legend">
-        <div style="display:flex;align-items:center;gap:5px"><div class="pie-dot" style="background:#1877f2"></div><div class="pie-label">Meta · ₺994,228.97</div></div>
-        <div style="display:flex;align-items:center;gap:5px"><div class="pie-dot" style="background:#ea4335"></div><div class="pie-label">Google · ₺219,509.48</div></div>
-      </div>
-    </div>
+  <div class="chart-card full" data-ico="saat">
+    <div class="cc-title"><span>Saatlik sipariş dağılımı</span></div>
+    <div class="hourly-box"><canvas id="hourly_chart_this_month"></canvas></div>
   </div>
 
-  <div class="charts-grid">
-    <div style="background:white;border-radius:10px;border:0.5px solid #cce0ee;padding:14px 16px;height:320px;display:flex;flex-direction:column;">
-      <div class="cc-title"><span>Meta — En yüksek ROAS'lı reklamlar</span></div>
-      <div class="scroll-area" id="meta_ads_this_month"></div>
-    </div>
-    <div style="background:white;border-radius:10px;border:0.5px solid #cce0ee;padding:14px 16px;height:320px;display:flex;flex-direction:column;">
-      <div class="cc-title"><span>Google — En yüksek ROAS'lı reklamlar</span></div>
-      <div class="scroll-area" id="google_ads_this_month"></div>
-    </div>
+    <div class="plabel">Meta Ads — En iyi performanslı içerikler</div>
+  <div class="chart-card full icerik-kart" data-ico="reklam">
+    <div class="cc-title"><span>En iyi performanslı içerikler</span><span class="cc-count">10 gönderi · ROAS'a göre sıralı</span></div>
+    
+    <div class="icerik-liste"><div class="icerik-satir"><div class="ic-rank">1</div><div class="ic-gorsel"><img src="icerik/4023705667919402.jpg" alt="" loading="lazy"></div><div class="ic-metin"><div class="ic-aciklama" title="Fırsatları Kaçırma ⚡️
+⚡️ 2. Üründe %25 EK İndirim
+📦 Ücretsiz Kargo
+💳 Peşin Fiyatına 3 Taksit
+www.riccon.com.tr">Fırsatları Kaçırma ⚡️
+⚡️ 2. Üründe %25 EK İndirim
+📦 Ücretsiz Kargo
+💳 Peşin Fiyatına 3 Taksit
+www.riccon.com.tr</div><a class="ic-link" href="https://www.instagram.com/p/DdEQ-CcMUCy/" target="_blank" rel="noopener">Instagram'da aç ↗</a></div><div class="ic-metrik"><span>Harcama</span><b>₺1.336,24</b></div><div class="ic-metrik"><span>Gelir</span><b>₺13.582,82</b></div><div class="ic-metrik vurgu"><span>ROAS</span><b>10,16x</b></div><div class="ic-metrik"><span>Tıklama Oranı</span><b>%8,13</b></div></div><div class="icerik-satir"><div class="ic-rank">2</div><div class="ic-gorsel"><img src="icerik/1445242377151491.jpg" alt="" loading="lazy"></div><div class="ic-metin"><div class="ic-aciklama" title="Gün Boyu Konfor!
+
+Qhedalvi Erkek Sneaker
+
+⚡️ 2. Üründe %25 EK İndirim
+📦 Ücretsiz Kargo
+💳 Peşin Fiyatına 3 Taksit">Gün Boyu Konfor!
+
+Qhedalvi Erkek Sneaker
+
+⚡️ 2. Üründe %25 EK İndirim
+📦 Ücretsiz Kargo
+💳 Peşin Fiyatına 3 Taksit</div><a class="ic-link" href="https://www.instagram.com/p/DU0I1P1DL5t/" target="_blank" rel="noopener">Instagram'da aç ↗</a></div><div class="ic-metrik"><span>Harcama</span><b>₺517,94</b></div><div class="ic-metrik"><span>Gelir</span><b>₺4.769,50</b></div><div class="ic-metrik vurgu"><span>ROAS</span><b>9,21x</b></div><div class="ic-metrik"><span>Tıklama Oranı</span><b>%2,24</b></div></div><div class="icerik-satir"><div class="ic-rank">3</div><div class="ic-gorsel"><img src="icerik/26247781481540357.jpg" alt="" loading="lazy"></div><div class="ic-metin"><div class="ic-aciklama" title="Modern &amp; Estetik !
+
+Iarwarin Kadın Kısa Topuklu Ayakkabı
+
+⚡️ 2. Üründe %25 EK İndirim
+📦 Ücretsiz Kargo
+💳 Peşin Fiyatına 3 Taksit">Modern &amp; Estetik !
+
+Iarwarin Kadın Kısa Topuklu Ayakkabı
+
+⚡️ 2. Üründe %25 EK İndirim
+📦 Ücretsiz Kargo
+💳 Peşin Fiyatına 3 Taksit</div><a class="ic-link" href="https://www.instagram.com/p/DWV744CjKcc/" target="_blank" rel="noopener">Instagram'da aç ↗</a></div><div class="ic-metrik"><span>Harcama</span><b>₺6.069,40</b></div><div class="ic-metrik"><span>Gelir</span><b>₺55.477,55</b></div><div class="ic-metrik vurgu"><span>ROAS</span><b>9,14x</b></div><div class="ic-metrik"><span>Tıklama Oranı</span><b>%5,16</b></div></div><div class="icerik-satir"><div class="ic-rank">4</div><div class="ic-gorsel"><img src="icerik/1424003332550699.jpg" alt="" loading="lazy"></div><div class="ic-metin"><div class="ic-aciklama" title="Rahat tasarım rahat ayaklar🧡
+
+Ürün Kodu: 0012159 Ekru
+
+⭐️ Net %40 İndirim
+⚡️ 2. Üründe %25 EK İndirim
+📦 Ücretsiz Kargo
+💳 Peşin Fiyatına 3 Taksit">Rahat tasarım rahat ayaklar🧡
+
+Ürün Kodu: 0012159 Ekru
+
+⭐️ Net %40 İndirim
+⚡️ 2. Üründe %25 EK İndirim
+📦 Ücretsiz Kargo
+💳 Peşin Fiyatına 3 Taksit</div><a class="ic-link" href="https://www.instagram.com/p/DIdbTMAMbFC/" target="_blank" rel="noopener">Instagram'da aç ↗</a></div><div class="ic-metrik"><span>Harcama</span><b>₺6.875,35</b></div><div class="ic-metrik"><span>Gelir</span><b>₺60.998,76</b></div><div class="ic-metrik vurgu"><span>ROAS</span><b>8,87x</b></div><div class="ic-metrik"><span>Tıklama Oranı</span><b>%3,47</b></div></div><div class="icerik-satir"><div class="ic-rank">5</div><div class="ic-gorsel"><img src="icerik/1720500852150771.jpg" alt="" loading="lazy"></div><div class="ic-metin"><div class="ic-aciklama" title="Yeni Sezon, Yeni Fırsatlar 🫶🏻
+⭐️ Net %40 İndirim
+⚡️ 2. Üründe %25 EK İndirim
+📦 Ücretsiz Kargo
+💳 Peşin Fiyatına 3 Taksit
+💫 Yeni Üyelere Özel %10 İndirim">Yeni Sezon, Yeni Fırsatlar 🫶🏻
+⭐️ Net %40 İndirim
+⚡️ 2. Üründe %25 EK İndirim
+📦 Ücretsiz Kargo
+💳 Peşin Fiyatına 3 Taksit
+💫 Yeni Üyelere Özel %10 İndirim</div></div><div class="ic-metrik"><span>Harcama</span><b>₺15.320,90</b></div><div class="ic-metrik"><span>Gelir</span><b>₺125.551,88</b></div><div class="ic-metrik vurgu"><span>ROAS</span><b>8,19x</b></div><div class="ic-metrik"><span>Tıklama Oranı</span><b>%5,50</b></div></div><div class="icerik-satir"><div class="ic-rank">6</div><div class="ic-gorsel"><img src="icerik/2052444492285698.jpg" alt="" loading="lazy"></div><div class="ic-metin"><div class="ic-aciklama" title="Yeni sezonda trendler dolabında  💫
+En iyi fiyat avantajı ❤️">Yeni sezonda trendler dolabında  💫
+En iyi fiyat avantajı ❤️</div></div><div class="ic-metrik"><span>Harcama</span><b>₺10.267,27</b></div><div class="ic-metrik"><span>Gelir</span><b>₺80.124,59</b></div><div class="ic-metrik vurgu"><span>ROAS</span><b>7,80x</b></div><div class="ic-metrik"><span>Tıklama Oranı</span><b>%7,25</b></div></div><div class="icerik-satir"><div class="ic-rank">7</div><div class="ic-gorsel"><img src="icerik/9647215438712453.jpg" alt="" loading="lazy"></div><div class="ic-metin"><div class="ic-aciklama" title="Rahatlığın Ötesinde👟🤍
+
+Ürün Kodu: 0012404Beyaz
+
+⚡️ 2. Üründe %25 EK İndirim
+📦 Ücretsiz Kargo
+💳 Peşin Fiyatına 3 Taksit">Rahatlığın Ötesinde👟🤍
+
+Ürün Kodu: 0012404Beyaz
+
+⚡️ 2. Üründe %25 EK İndirim
+📦 Ücretsiz Kargo
+💳 Peşin Fiyatına 3 Taksit</div><a class="ic-link" href="https://www.instagram.com/p/DGvBPlKM58u/" target="_blank" rel="noopener">Instagram'da aç ↗</a></div><div class="ic-metrik"><span>Harcama</span><b>₺7.018,44</b></div><div class="ic-metrik"><span>Gelir</span><b>₺53.344,31</b></div><div class="ic-metrik vurgu"><span>ROAS</span><b>7,60x</b></div><div class="ic-metrik"><span>Tıklama Oranı</span><b>%3,87</b></div></div><div class="icerik-satir"><div class="ic-rank">8</div><div class="ic-gorsel"><img src="icerik/669569412154163.jpg" alt="" loading="lazy"></div><div class="ic-metin"><div class="ic-aciklama" title="Simsiyah🖤 Sezon Sonuna Özel 449TL 💎
+
+Ürün Kodu: 0012124 Mat Siyah
+
+⚡️ 2. Üründe %25 EK İndirim
+📦 Ücretsiz Kargo
+💳 Peşin Fiyatına 3 Taksit">Simsiyah🖤 Sezon Sonuna Özel 449TL 💎
+
+Ürün Kodu: 0012124 Mat Siyah
+
+⚡️ 2. Üründe %25 EK İndirim
+📦 Ücretsiz Kargo
+💳 Peşin Fiyatına 3 Taksit</div><a class="ic-link" href="https://www.instagram.com/p/DIdXQQpMuqU/" target="_blank" rel="noopener">Instagram'da aç ↗</a></div><div class="ic-metrik"><span>Harcama</span><b>₺10.182,67</b></div><div class="ic-metrik"><span>Gelir</span><b>₺76.702,13</b></div><div class="ic-metrik vurgu"><span>ROAS</span><b>7,53x</b></div><div class="ic-metrik"><span>Tıklama Oranı</span><b>%4,70</b></div></div><div class="icerik-satir"><div class="ic-rank">9</div><div class="ic-gorsel"><img src="icerik/2834951626856803.jpg" alt="" loading="lazy"></div><div class="ic-metin"><div class="ic-aciklama" title="Yeni sezonun en sevilen modeli en iyi fiyat avantajıyla 💙">Yeni sezonun en sevilen modeli en iyi fiyat avantajıyla 💙</div></div><div class="ic-metrik"><span>Harcama</span><b>₺6.801,43</b></div><div class="ic-metrik"><span>Gelir</span><b>₺45.151,21</b></div><div class="ic-metrik vurgu"><span>ROAS</span><b>6,64x</b></div><div class="ic-metrik"><span>Tıklama Oranı</span><b>%2,58</b></div></div><div class="icerik-satir"><div class="ic-rank">10</div><div class="ic-gorsel"><img src="icerik/2104419353368452.jpg" alt="" loading="lazy"></div><div class="ic-metin"><div class="ic-aciklama" title="Riccon’da Seni Bekleyen İndirimler Var ⚡️
+Sepetindeki Ürünleri Unutma 😉
+www.riccon.com.tr">Riccon’da Seni Bekleyen İndirimler Var ⚡️
+Sepetindeki Ürünleri Unutma 😉
+www.riccon.com.tr</div></div><div class="ic-metrik"><span>Harcama</span><b>₺5.837,09</b></div><div class="ic-metrik"><span>Gelir</span><b>₺38.387,99</b></div><div class="ic-metrik vurgu"><span>ROAS</span><b>6,58x</b></div><div class="ic-metrik"><span>Tıklama Oranı</span><b>%6,57</b></div></div></div>
   </div>
 
 </div>
@@ -687,8 +1207,8 @@ body{background:#f0f6fb;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',
 <script>
 (function(){
   var labels = ['00:00', '01:00', '02:00', '03:00', '04:00', '05:00', '06:00', '07:00', '08:00', '09:00', '10:00', '11:00', '12:00', '13:00', '14:00', '15:00', '16:00', '17:00', '18:00', '19:00', '20:00', '21:00', '22:00', '23:00'];
-  var counts = [84, 86, 64, 45, 38, 10, 9, 7, 5, 5, 9, 21, 42, 49, 65, 83, 84, 70, 95, 81, 65, 54, 70, 69];
-  var revenues = [69838.23, 71445.49, 58992.69, 41786.93, 32851.54, 8180.45, 7658.16, 5582.66, 4269.5, 4692.98, 7442.3, 18342.36, 38159.29, 49282.92, 56197.17, 73113.35, 68581.84, 63427.18, 79029.28, 74626.9, 53586.77, 46112.59, 64234.92, 59892.97];
+  var counts = [45, 38, 10, 9, 7, 5, 5, 9, 21, 42, 49, 65, 83, 84, 70, 95, 81, 65, 54, 70, 69, 84, 86, 64];
+  var revenues = [41786.93, 32851.54, 8180.45, 7658.16, 5582.66, 4269.5, 4692.98, 7442.3, 18342.36, 38159.29, 49282.92, 56197.17, 73113.35, 68581.84, 63427.18, 79029.28, 74626.9, 53586.77, 46112.59, 64234.92, 59892.97, 69838.23, 71445.49, 58992.69];
   window.addEventListener('load', function(){
     var ctx = document.getElementById('hourly_chart_this_month');
     if(!ctx) return;
@@ -734,37 +1254,457 @@ body{background:#f0f6fb;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',
 <div class="footer">riccon.com.tr · 2026</div>
 
 <script>
-var pieCharts={};
-function buildPie(id,meta,google){
-  var ctx=document.getElementById(id);
-  if(!ctx)return;
-  if(pieCharts[id]){pieCharts[id].destroy();}
-  pieCharts[id]=new Chart(ctx,{
-    type:'doughnut',
-    data:{labels:['Meta','Google'],datasets:[{data:[meta,google],backgroundColor:['#1877f2','#ea4335'],borderWidth:0}]},
-    options:{responsive:false,plugins:{legend:{display:false},tooltip:{callbacks:{label:function(c){return c.label+': ₺'+c.raw.toLocaleString('tr-TR');}}}},cutout:'65%'}
-  });
-}
+/* ================= ortak yardimcilar ================= */
+var hourlyChart=null;
+function tl(n){return '₺'+(Number(n)||0).toLocaleString('tr-TR',{minimumFractionDigits:2,maximumFractionDigits:2});}
+function sayi(n){return (Number(n)||0).toLocaleString('tr-TR');}
+function bol(a,b){return b>0?a/b:0;}
+function yuvarla(n,k){k=k||2;return Math.round((Number(n)||0)*Math.pow(10,k))/Math.pow(10,k);}
+function kacis(s){return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');}
+
 function showPeriod(period,btn){
   document.querySelectorAll('.period-content').forEach(function(el){el.classList.remove('active');});
-  document.querySelectorAll('.fb').forEach(function(b){b.classList.remove('active');});
-  document.getElementById('period-'+period).classList.add('active');
-  btn.classList.add('active');
-  var d=window.pieDataMap[period];
-  if(d){
-    buildPie('pie_spend_'+period,d.metaSpend,d.googleSpend);
-    buildPie('pie_roas_'+period,d.metaRoasVal,d.googleRoasVal);
+  document.querySelectorAll('.seg').forEach(function(b){b.classList.remove('active');});
+  var hedef=document.getElementById('period-'+period);
+  if(hedef)hedef.classList.add('active');
+  if(btn)btn.classList.add('active');
+  if(period!=='custom'){
+    alanSifirla();
   }
 }
-window.addEventListener('load',function(){
-  var d=window.pieDataMap['yesterday'];
-  if(d){
-    buildPie('pie_spend_yesterday',d.metaSpend,d.googleSpend);
-    buildPie('pie_roas_yesterday',d.metaRoasVal,d.googleRoasVal);
-  }
+
+document.getElementById('segmented').addEventListener('click',function(e){
+  var b=e.target.closest('.seg');
+  if(b)showPeriod(b.dataset.period,b);
 });
-window.pieDataMap = {"yesterday":{metaSpend:13318.94,googleSpend:1373.64,metaRoasVal:95220.44,googleRoasVal:12308.45},"last_7d":{metaSpend:105297.59,googleSpend:9736.67,metaRoasVal:691014.47,googleRoasVal:152363.56},"last_30d":{metaSpend:473913.14,googleSpend:39570.64,metaRoasVal:3126943.95,googleRoasVal:807598.26},"this_month":{metaSpend:152784.5,googleSpend:14716.32,metaRoasVal:994228.97,googleRoasVal:219509.48},};
-window.addEventListener('load',function(){(function(){var html="";html+="<div class=\"bar-row\"><div class=\"bar-rank\">1</div><div class=\"bar-name\">112_NU_E_HValue_Reels_Tybindel</div><div class=\"bar-track\"><div class=\"bar-fill\" style=\"width:100%;background:#1877f2\"></div></div><div class=\"bar-val\">30.04x</div></div>";html+="<div class=\"bar-row\"><div class=\"bar-rank\">2</div><div class=\"bar-name\">112_REM_A56-P56_Purchase_Catalog</div><div class=\"bar-track\"><div class=\"bar-fill\" style=\"width:84%;background:#1877f2\"></div></div><div class=\"bar-val\">25.09x</div></div>";html+="<div class=\"bar-row\"><div class=\"bar-rank\">3</div><div class=\"bar-name\">LLA1-2| Reels | Iarwarin</div><div class=\"bar-track\"><div class=\"bar-fill\" style=\"width:59%;background:#1877f2\"></div></div><div class=\"bar-val\">17.75x</div></div>";html+="<div class=\"bar-row\"><div class=\"bar-rank\">4</div><div class=\"bar-name\">Interest | Purchase | 0012255</div><div class=\"bar-track\"><div class=\"bar-fill\" style=\"width:56%;background:#1877f2\"></div></div><div class=\"bar-val\">16.84x</div></div>";html+="<div class=\"bar-row\"><div class=\"bar-rank\">5</div><div class=\"bar-name\">Reels | Gisesalia</div><div class=\"bar-track\"><div class=\"bar-fill\" style=\"width:49%;background:#1877f2\"></div></div><div class=\"bar-val\">14.8x</div></div>";document.getElementById("meta_ads_yesterday").innerHTML=html;})();(function(){var html="";html+="<div class=\"bar-row\"><div class=\"bar-rank\">1</div><div class=\"bar-name\">112-Search-Brand</div><div class=\"bar-track\"><div class=\"bar-fill\" style=\"width:100%;background:#ea4335\"></div></div><div class=\"bar-val\">21.26x</div></div>";html+="<div class=\"bar-row\"><div class=\"bar-rank\">2</div><div class=\"bar-name\">112_Search_Non-Branded</div><div class=\"bar-track\"><div class=\"bar-fill\" style=\"width:24%;background:#ea4335\"></div></div><div class=\"bar-val\">5.2x</div></div>";html+="<div class=\"bar-row\"><div class=\"bar-rank\">3</div><div class=\"bar-name\">112_Search_Non-Branded</div><div class=\"bar-track\"><div class=\"bar-fill\" style=\"width:0%;background:#ea4335\"></div></div><div class=\"bar-val\">0.0x</div></div>";html+="<div class=\"bar-row\"><div class=\"bar-rank\">4</div><div class=\"bar-name\">112_Search_Non-Branded</div><div class=\"bar-track\"><div class=\"bar-fill\" style=\"width:0%;background:#ea4335\"></div></div><div class=\"bar-val\">0.0x</div></div>";document.getElementById("google_ads_yesterday").innerHTML=html;})();(function(){var html="";html+="<div class=\"bar-row\"><div class=\"bar-rank\">1</div><div class=\"bar-name\">Reels | 0012255 | BB</div><div class=\"bar-track\"><div class=\"bar-fill\" style=\"width:100%;background:#1877f2\"></div></div><div class=\"bar-val\">105.06x</div></div>";html+="<div class=\"bar-row\"><div class=\"bar-rank\">2</div><div class=\"bar-name\">112_NU_E-MValue_Post_0012404Beyaz</div><div class=\"bar-track\"><div class=\"bar-fill\" style=\"width:44%;background:#1877f2\"></div></div><div class=\"bar-val\">46.05x</div></div>";html+="<div class=\"bar-row\"><div class=\"bar-rank\">3</div><div class=\"bar-name\">LLA1-2| Reels | Saelheira-K</div><div class=\"bar-track\"><div class=\"bar-fill\" style=\"width:38%;background:#1877f2\"></div></div><div class=\"bar-val\">40.4x</div></div>";html+="<div class=\"bar-row\"><div class=\"bar-rank\">4</div><div class=\"bar-name\">112_NU_E_HValue_Reels_Tybindel</div><div class=\"bar-track\"><div class=\"bar-fill\" style=\"width:18%;background:#1877f2\"></div></div><div class=\"bar-val\">18.99x</div></div>";html+="<div class=\"bar-row\"><div class=\"bar-rank\">5</div><div class=\"bar-name\">Interest | Purchase | 0012255</div><div class=\"bar-track\"><div class=\"bar-fill\" style=\"width:11%;background:#1877f2\"></div></div><div class=\"bar-val\">11.5x</div></div>";document.getElementById("meta_ads_last_7d").innerHTML=html;})();(function(){var html="";html+="<div class=\"bar-row\"><div class=\"bar-rank\">1</div><div class=\"bar-name\">112-Search-Brand</div><div class=\"bar-track\"><div class=\"bar-fill\" style=\"width:100%;background:#ea4335\"></div></div><div class=\"bar-val\">33.68x</div></div>";html+="<div class=\"bar-row\"><div class=\"bar-rank\">2</div><div class=\"bar-name\">112_Search_Non-Branded</div><div class=\"bar-track\"><div class=\"bar-fill\" style=\"width:24%;background:#ea4335\"></div></div><div class=\"bar-val\">7.99x</div></div>";html+="<div class=\"bar-row\"><div class=\"bar-rank\">3</div><div class=\"bar-name\">112_Search_Non-Branded</div><div class=\"bar-track\"><div class=\"bar-fill\" style=\"width:20%;background:#ea4335\"></div></div><div class=\"bar-val\">6.65x</div></div>";html+="<div class=\"bar-row\"><div class=\"bar-rank\">4</div><div class=\"bar-name\">112_Search_Non-Branded</div><div class=\"bar-track\"><div class=\"bar-fill\" style=\"width:16%;background:#ea4335\"></div></div><div class=\"bar-val\">5.31x</div></div>";document.getElementById("google_ads_last_7d").innerHTML=html;})();(function(){var html="";html+="<div class=\"bar-row\"><div class=\"bar-rank\">1</div><div class=\"bar-name\">Reels | 0012255 | BB</div><div class=\"bar-track\"><div class=\"bar-fill\" style=\"width:100%;background:#1877f2\"></div></div><div class=\"bar-val\">25.32x</div></div>";html+="<div class=\"bar-row\"><div class=\"bar-rank\">2</div><div class=\"bar-name\">112_NU_E-MValue_Post_0012404Beyaz</div><div class=\"bar-track\"><div class=\"bar-fill\" style=\"width:52%;background:#1877f2\"></div></div><div class=\"bar-val\">13.24x</div></div>";html+="<div class=\"bar-row\"><div class=\"bar-rank\">3</div><div class=\"bar-name\">Interest | Purchase | 0012255</div><div class=\"bar-track\"><div class=\"bar-fill\" style=\"width:45%;background:#1877f2\"></div></div><div class=\"bar-val\">11.5x</div></div>";html+="<div class=\"bar-row\"><div class=\"bar-rank\">4</div><div class=\"bar-name\">ASC | İkinci Ürün</div><div class=\"bar-track\"><div class=\"bar-fill\" style=\"width:39%;background:#1877f2\"></div></div><div class=\"bar-val\">9.92x</div></div>";html+="<div class=\"bar-row\"><div class=\"bar-rank\">5</div><div class=\"bar-name\">112_REM_A56-P56_Purchase_Catalog</div><div class=\"bar-track\"><div class=\"bar-fill\" style=\"width:39%;background:#1877f2\"></div></div><div class=\"bar-val\">9.85x</div></div>";document.getElementById("meta_ads_last_30d").innerHTML=html;})();(function(){var html="";html+="<div class=\"bar-row\"><div class=\"bar-rank\">1</div><div class=\"bar-name\">112-Search-Brand</div><div class=\"bar-track\"><div class=\"bar-fill\" style=\"width:100%;background:#ea4335\"></div></div><div class=\"bar-val\">36.85x</div></div>";html+="<div class=\"bar-row\"><div class=\"bar-rank\">2</div><div class=\"bar-name\">112_Search_Non-Branded</div><div class=\"bar-track\"><div class=\"bar-fill\" style=\"width:30%;background:#ea4335\"></div></div><div class=\"bar-val\">10.9x</div></div>";html+="<div class=\"bar-row\"><div class=\"bar-rank\">3</div><div class=\"bar-name\">112_Search_Non-Branded</div><div class=\"bar-track\"><div class=\"bar-fill\" style=\"width:22%;background:#ea4335\"></div></div><div class=\"bar-val\">8.28x</div></div>";html+="<div class=\"bar-row\"><div class=\"bar-rank\">4</div><div class=\"bar-name\">112_Search_Non-Branded</div><div class=\"bar-track\"><div class=\"bar-fill\" style=\"width:21%;background:#ea4335\"></div></div><div class=\"bar-val\">7.82x</div></div>";document.getElementById("google_ads_last_30d").innerHTML=html;})();(function(){var html="";html+="<div class=\"bar-row\"><div class=\"bar-rank\">1</div><div class=\"bar-name\">Reels | 0012255 | BB</div><div class=\"bar-track\"><div class=\"bar-fill\" style=\"width:100%;background:#1877f2\"></div></div><div class=\"bar-val\">81.07x</div></div>";html+="<div class=\"bar-row\"><div class=\"bar-rank\">2</div><div class=\"bar-name\">LLA1-2| Reels | Saelheira-K</div><div class=\"bar-track\"><div class=\"bar-fill\" style=\"width:46%;background:#1877f2\"></div></div><div class=\"bar-val\">37.41x</div></div>";html+="<div class=\"bar-row\"><div class=\"bar-rank\">3</div><div class=\"bar-name\">112_NU_E-MValue_Post_0012404Beyaz</div><div class=\"bar-track\"><div class=\"bar-fill\" style=\"width:37%;background:#1877f2\"></div></div><div class=\"bar-val\">30.28x</div></div>";html+="<div class=\"bar-row\"><div class=\"bar-rank\">4</div><div class=\"bar-name\">112_NU_E_HValue_Reels_Tybindel</div><div class=\"bar-track\"><div class=\"bar-fill\" style=\"width:20%;background:#1877f2\"></div></div><div class=\"bar-val\">15.99x</div></div>";html+="<div class=\"bar-row\"><div class=\"bar-rank\">5</div><div class=\"bar-name\">Interest | Purchase | 0012255</div><div class=\"bar-track\"><div class=\"bar-fill\" style=\"width:14%;background:#1877f2\"></div></div><div class=\"bar-val\">10.98x</div></div>";document.getElementById("meta_ads_this_month").innerHTML=html;})();(function(){var html="";html+="<div class=\"bar-row\"><div class=\"bar-rank\">1</div><div class=\"bar-name\">112-Search-Brand</div><div class=\"bar-track\"><div class=\"bar-fill\" style=\"width:100%;background:#ea4335\"></div></div><div class=\"bar-val\">30.97x</div></div>";html+="<div class=\"bar-row\"><div class=\"bar-rank\">2</div><div class=\"bar-name\">112_Search_Non-Branded</div><div class=\"bar-track\"><div class=\"bar-fill\" style=\"width:24%;background:#ea4335\"></div></div><div class=\"bar-val\">7.36x</div></div>";html+="<div class=\"bar-row\"><div class=\"bar-rank\">3</div><div class=\"bar-name\">112_Search_Non-Branded</div><div class=\"bar-track\"><div class=\"bar-fill\" style=\"width:21%;background:#ea4335\"></div></div><div class=\"bar-val\">6.47x</div></div>";html+="<div class=\"bar-row\"><div class=\"bar-rank\">4</div><div class=\"bar-name\">112_Search_Non-Branded</div><div class=\"bar-track\"><div class=\"bar-fill\" style=\"width:13%;background:#ea4335\"></div></div><div class=\"bar-val\">4.16x</div></div>";document.getElementById("google_ads_this_month").innerHTML=html;})();});
+
+/* ================= ozel tarih araligi ================= */
+var ARSIV=null, ARSIV_YUKLENIYOR=null;
+
+function arsivGetir(){
+  if(ARSIV)return Promise.resolve(ARSIV);
+  if(ARSIV_YUKLENIYOR)return ARSIV_YUKLENIYOR;
+  ARSIV_YUKLENIYOR=fetch('veri.json',{cache:'no-store'})
+    .then(function(r){if(!r.ok)throw new Error('veri.json bulunamadı');return r.json();})
+    .then(function(j){ARSIV=j;return j;});
+  return ARSIV_YUKLENIYOR;
+}
+
+function gunListesi(bas,bit){
+  /* saat dilimi kaymasini onlemek icin UTC uzerinden ilerlenir */
+  var out=[],d=new Date(bas+'T00:00:00Z'),son=new Date(bit+'T00:00:00Z');
+  while(d<=son){out.push(d.toISOString().slice(0,10));d.setUTCDate(d.getUTCDate()+1);}
+  return out;
+}
+
+function topla(gunler){
+  var t={
+    meta:{spend:0,clicks:0,impr:0,purch:0,pval:0},
+    google:{spend:0,clicks:0,impr:0,conv:0,cval:0},
+    shopify:{orders:0,gross:0,hourly:[],products:{}},
+    metaAds:{},googleAds:{},gunSayisi:0,eksikGun:0
+  };
+  for(var h=0;h<24;h++)t.shopify.hourly.push([0,0]);
+  gunler.forEach(function(k){
+    var g=ARSIV.gunler[k];
+    if(!g){t.eksikGun++;return;}
+    t.gunSayisi++;
+    ['spend','clicks','impr','purch','pval'].forEach(function(f){t.meta[f]+=(g.meta&&g.meta[f])||0;});
+    ['spend','clicks','impr','conv','cval'].forEach(function(f){t.google[f]+=(g.google&&g.google[f])||0;});
+    var s=g.shopify||{};
+    t.shopify.orders+=s.orders||0;
+    t.shopify.gross+=s.gross||0;
+    (s.hourly||[]).forEach(function(h,i){t.shopify.hourly[i][0]+=h[0]||0;t.shopify.hourly[i][1]+=h[1]||0;});
+    (s.products||[]).forEach(function(p){t.shopify.products[p[0]]=(t.shopify.products[p[0]]||0)+p[1];});
+    (g.meta_ads||[]).forEach(function(a){
+      var r=t.metaAds[a[0]]||(t.metaAds[a[0]]={spend:0,val:0});r.spend+=a[1];r.val+=a[2];});
+    (g.google_ads||[]).forEach(function(a){
+      var r=t.googleAds[a[0]]||(t.googleAds[a[0]]={spend:0,val:0});r.spend+=a[1];r.val+=a[2];});
+  });
+  return t;
+}
+
+function barListesi(satirlar,renk,bicim){
+  if(!satirlar.length)return '<div class="bos">Bu aralıkta veri yok</div>';
+  var max=satirlar[0][1]||1,html='';
+  satirlar.forEach(function(s,i){
+    var pct=Math.round((s[1]/max)*100);
+    html+='<div class="bar-row"><div class="bar-rank">'+(i+1)+'</div><div class="bar-name" title="'+kacis(s[0])+'">'+kacis(s[0])+
+          '</div><div class="bar-track"><div class="bar-fill" style="width:'+pct+'%;background:'+renk+'"></div></div>'+
+          '<div class="bar-val">'+bicim(s[1])+'</div></div>';
+  });
+  return html;
+}
+
+function ozelRapor(bas,bit){
+  var gunler=gunListesi(bas,bit), t=topla(gunler);
+  var m=t.meta,g=t.google,s=t.shopify;
+
+  /* ayni uzunlukta onceki donem */
+  var gunAdedi=gunler.length;
+  var oncBit=tariheIso(new Date(isoTarih(bas).getTime()-86400000));
+  var oncBas=tariheIso(new Date(isoTarih(oncBit).getTime()-(gunAdedi-1)*86400000));
+  var oncT=null, oncEksik=false;
+  if(oncBit>=ARSIV_MIN&&oncBas>=ARSIV_MIN){
+    var ot=topla(gunListesi(oncBas,oncBit));
+    /* onceki donemin tum gunleri arsivde yoksa yuzde yaniltici olur */
+    if(ot.gunSayisi===gunAdedi)oncT=ot; else oncEksik=true;
+  }else{oncEksik=true;}
+  var C=turet(t), O=oncT?turet(oncT):null;
+  function D(anahtar,ters,notr,bicim,sinif){
+    return farkHtml(C[anahtar], O?O[anahtar]:null, ters, notr, bicim, sinif);
+  }
+  var toplamHarcama=m.spend+g.spend, toplamGelir=s.gross;
+  var toplamRoas=yuvarla(bol(toplamGelir,toplamHarcama));
+  var mRoas=yuvarla(bol(m.pval,m.spend)), gRoas=yuvarla(bol(g.cval,g.spend));
+  var mCtr=yuvarla(bol(m.clicks,m.impr)*100), mCpc=yuvarla(bol(m.spend,m.clicks)), mCpm=yuvarla(bol(m.spend,m.impr)*1000);
+  var gCtr=yuvarla(bol(g.clicks,g.impr)*100), gTbm=yuvarla(bol(g.spend,g.clicks)), gBgbm=yuvarla(bol(g.spend,g.impr)*1000);
+  var aov=yuvarla(bol(s.gross,s.orders));
+
+  var urunler=Object.keys(s.products).map(function(k){return [k,s.products[k]];})
+    .sort(function(a,b){return b[1]-a[1];}).slice(0,20);
+
+  function adSirala(obj){
+    return Object.keys(obj).map(function(k){return [k,yuvarla(bol(obj[k].val,obj[k].spend)),obj[k].spend];})
+      .filter(function(a){return a[2]>0;})
+      .sort(function(a,b){return b[1]-a[1];}).slice(0,10);
+  }
+  var metaAds=adSirala(t.metaAds), googleAds=adSirala(t.googleAds);
+
+  var trTarih=function(d){var p=d.split('-');return p[2]+'.'+p[1]+'.'+p[0];};
+  var not='<div class="range-note"><span class="range-tag">Özel aralık</span>'+
+    '<span><b>'+trTarih(bas)+'</b> — <b>'+trTarih(bit)+'</b> · '+t.gunSayisi+' gün'+
+    (t.eksikGun?' · <span style="color:#d94040">'+t.eksikGun+' gün için veri yok</span>':'')+'</span></div>'+
+    '<div class="kars-not"><span class="kars-tag">Karşılaştırma</span><span>'+
+      (O?('<b>'+trTarih(bas)+' — '+trTarih(bit)+'</b> ('+gunAdedi+' gün) &nbsp;·&nbsp; önceki dönem: <b>'+
+          trTarih(oncBas)+' — '+trTarih(oncBit)+'</b>')
+         :'Önceki dönemin tamamı arşivde olmadığı için karşılaştırma yapılmadı.')+
+    '</span></div>';
+
+  var html=not+
+  '<div class="plabel">Genel Özet</div><div class="summary-grid">'+
+    '<div class="scard" data-ico="harcama"><div class="scard-label">Toplam Harcama</div><div class="scard-value">'+tl(toplamHarcama)+'</div>'+D('toplamHarcama',false,true,tl,'scard-sub')+'</div>'+
+    '<div class="scard green" data-ico="gelir"><div class="scard-label">Toplam Gelir</div><div class="scard-value">'+tl(toplamGelir)+'</div>'+D('gelir',false,false,tl,'scard-sub')+'</div>'+
+    '<div class="scard orange" data-ico="roas"><div class="scard-label">Toplam ROAS</div><div class="scard-value">'+toplamRoas+'x</div>'+D('toplamRoas',false,false,carpanTr,'scard-sub')+'</div>'+
+    '<div class="scard purple" data-ico="siparis"><div class="scard-label">Toplam Sipariş</div><div class="scard-value">'+sayi(s.orders)+'</div>'+D('siparis',false,false,sayi,'scard-sub')+'</div>'+
+  '</div>'+
+
+  '<div class="plabel">Meta Ads</div><div class="platform-block">'+
+    '<div class="pb-header"><div class="pb-icon"><img src="logos/meta-ads-logo.png" alt="Meta"></div><div class="pb-name">Meta Ads</div></div>'+
+    '<div class="metrics-row" style="grid-template-columns:repeat(6,1fr)">'+
+      mc('Harcama',tl(m.spend),'harcama',D('mSpend',false,true,tl))+mc('Alışveriş',sayi(m.purch),'sepet',D('mPurch',false,false,sayi))+mc('ROAS',mRoas+'x','roas',D('mRoas',false,false,carpanTr))+
+      mc('CPC',tl(mCpc),'tiklama',D('mCpc',true,false,tl))+mc('CTR','%'+mCtr,'oran',D('mCtr',false,false,yuzdeTr))+mc('CPM',tl(mCpm),'gosterim',D('mCpm',true,false,tl))+
+    '</div></div>'+
+
+  '<div class="plabel">Google Ads</div><div class="platform-block">'+
+    '<div class="pb-header"><div class="pb-icon"><img src="logos/google-ads-logo.png" alt="Google Ads"></div><div class="pb-name">Google Ads</div></div>'+
+    '<div class="metrics-row" style="grid-template-columns:repeat(6,1fr)">'+
+      mc('Harcama',tl(g.spend),'harcama',D('gSpend',false,true,tl))+mc('Dönüşüm',sayi(Math.round(g.conv)),'donusum',D('gConv',false,false,sayi))+mc('ROAS',gRoas+'x','roas',D('gRoas',false,false,carpanTr))+
+      mc('TBM',tl(gTbm),'tiklama',D('gTbm',true,false,tl))+mc('Tıklama Oranı','%'+gCtr,'oran',D('gCtr',false,false,yuzdeTr))+mc('BGBM',tl(gBgbm),'gosterim',D('gBgbm',true,false,tl))+
+    '</div></div>'+
+
+  '<div class="plabel">Shopify</div><div class="platform-block">'+
+    '<div class="pb-header"><div class="pb-icon"><img src="logos/shopify-logo.png" alt="Shopify"></div><div class="pb-name">Shopify</div></div>'+
+    '<div class="metrics-row" style="grid-template-columns:repeat(4,1fr)">'+
+      mc('Gelir',tl(s.gross),'gelir',D('gelir',false,false,tl))+mc('Toplam ROAS',toplamRoas+'x','roas',D('toplamRoas',false,false,carpanTr))+mc('Ort. Sepet',tl(aov),'sepet',D('aov',false,false,tl))+mc('Sipariş',sayi(s.orders),'siparis',D('siparis',false,false,sayi))+
+    '</div></div>'+
+
+  '<div class="plabel">Analizler</div>'+
+  '<div class="chart-card full" data-ico="urun">'+
+    '<div class="cc-title"><span>En çok satan ürünler</span><span class="cc-count">'+urunler.length+' ürün</span></div>'+
+    '<div class="scroll-area">'+barListesi(urunler,'#2c77a3',tl)+'</div></div>'+
+  '<div class="chart-card full" data-ico="saat">'+
+    '<div class="cc-title"><span>Saatlik sipariş dağılımı</span></div>'+
+    '<div class="hourly-box"><canvas id="hourly_chart_custom"></canvas></div></div>'+
+
+  icerikBloku(gunler)+
+  '';
+
+  document.getElementById('customIcerik').innerHTML=html;
+  showPeriod('custom',null);
+  alanDoldur(bas,bit);
+
+  if(hourlyChart){hourlyChart.destroy();}
+  var etiketler=[],adet=[],gelir=[];
+  for(var h=0;h<24;h++){etiketler.push((h<10?'0':'')+h+':00');adet.push(s.hourly[h][0]);gelir.push(yuvarla(s.hourly[h][1]));}
+  hourlyChart=new Chart(document.getElementById('hourly_chart_custom'),{
+    type:'bar',
+    data:{labels:etiketler,datasets:[
+      {label:'Sipariş',data:adet,backgroundColor:'#2c77a3',borderRadius:3,yAxisID:'y'},
+      {label:'Gelir',data:gelir,type:'line',borderColor:'#2e9e62',backgroundColor:'rgba(46,158,98,0.08)',tension:.4,pointRadius:2,borderWidth:2,yAxisID:'y1'}]},
+    options:{responsive:true,maintainAspectRatio:false,interaction:{mode:'index',intersect:false},
+      plugins:{legend:{labels:{font:{size:10},boxWidth:10}}},
+      scales:{x:{ticks:{font:{size:8},maxRotation:45},grid:{display:false}},
+        y:{ticks:{font:{size:9}},grid:{color:'#eef5fa'}},
+        y1:{position:'right',ticks:{font:{size:9},callback:function(v){return '₺'+v.toLocaleString('tr-TR');}},grid:{display:false}}}}
+  });
+  window.scrollTo({top:0,behavior:'smooth'});
+}
+
+
+function icerikBloku(gunler){
+  var toplam={};
+  gunler.forEach(function(k){
+    var g=ARSIV.gunler[k];
+    if(!g)return;
+    (g.icerik||[]).forEach(function(r){
+      var t=toplam[r[0]]||(toplam[r[0]]={spend:0,gelir:0,clicks:0,impr:0});
+      t.spend+=r[1];t.gelir+=r[2];t.clicks+=r[3];t.impr+=r[4];
+    });
+  });
+  var icerikler=(ARSIV.icerikler)||{};
+  var liste=Object.keys(toplam).filter(function(cid){return toplam[cid].spend>0;}).map(function(cid){
+    var t=toplam[cid], b=icerikler[cid]||{};
+    return {cid:cid, aciklama:b.aciklama||'', gorsel:b.gorsel||'', permalink:b.permalink||'', ig:!!b.ig,
+            harcama:t.spend, gelir:t.gelir, roas:t.gelir/t.spend, ctr:t.impr?t.clicks/t.impr*100:0};
+  });
+  var ig=liste.filter(function(i){return i.ig;});
+  var kaynak=ig.length?'instagram':'tumu';
+  var secilen=(ig.length?ig:liste).sort(function(a,b){return b.roas-a.roas;}).slice(0,10);
+
+  var govde='', sayi='';
+  if(!secilen.length){
+    govde='<div class="bos">Bu aralık için içerik verisi yok. Meta bağlantısı kurulduktan sonra burası dolacak.</div>';
+  }else{
+    sayi='<span class="cc-count">'+secilen.length+' gönderi · ROAS\'a göre sıralı</span>';
+    secilen.forEach(function(ic,i){
+      var aciklama=kacis(ic.aciklama||'Açıklama yok');
+      var gorsel=ic.gorsel?'<img src="'+kacis(ic.gorsel)+'" alt="" loading="lazy">':'<div class="ic-yok">görsel<br>yok</div>';
+      var link=ic.permalink?'<a class="ic-link" href="'+kacis(ic.permalink)+'" target="_blank" rel="noopener">Instagram\'da aç ↗</a>':'';
+      govde+='<div class="icerik-satir"><div class="ic-rank">'+(i+1)+'</div>'+
+        '<div class="ic-gorsel">'+gorsel+'</div>'+
+        '<div class="ic-metin"><div class="ic-aciklama" title="'+aciklama+'">'+aciklama+'</div>'+link+'</div>'+
+        '<div class="ic-metrik"><span>Harcama</span><b>'+tl(ic.harcama)+'</b></div>'+
+        '<div class="ic-metrik"><span>Gelir</span><b>'+tl(ic.gelir)+'</b></div>'+
+        '<div class="ic-metrik vurgu"><span>ROAS</span><b>'+carpanTr(ic.roas)+'</b></div>'+
+        '<div class="ic-metrik"><span>Tıklama Oranı</span><b>'+yuzdeTr(ic.ctr)+'</b></div></div>';
+    });
+  }
+  var uyari=(secilen.length&&kaynak==='tumu')?
+    '<div class="ic-uyari">Instagram kaynaklı gönderi bulunamadı; tüm reklam kreatifleri listeleniyor.</div>':'';
+
+  return '<div class="plabel">Meta Ads — En iyi performanslı içerikler</div>'+
+    '<div class="chart-card full icerik-kart" data-ico="reklam">'+
+      '<div class="cc-title"><span>En iyi performanslı içerikler</span>'+sayi+'</div>'+uyari+
+      '<div class="icerik-liste">'+govde+'</div></div>';
+}
+
+function mc(l,v,ico,deg){return '<div class="mc" data-ico="'+(ico||'')+'"><div class="mc-label">'+l+'</div><div class="mc-value">'+v+'</div>'+(deg||'')+'</div>';}
+function farkHtml(yeni,eski,ters,notr,bicim,sinif){
+  sinif=sinif||'mc-change';
+  if(eski===null||eski===undefined||eski===0)
+    return '<div class="'+sinif+' neutral" title="Önceki dönemde veri yok">—</div>';
+  var d=(yeni-eski)/Math.abs(eski)*100;
+  var ipucu=bicim?'Önceki dönem: '+bicim(eski):'';
+  if(Math.abs(d)<0.05)return '<div class="'+sinif+' neutral" title="'+ipucu+'">%0,0</div>';
+  var ok=d>0?'▲':'▼', renk;
+  if(notr)renk='neutral';
+  else{var iyi=d>0; if(ters)iyi=!iyi; renk=iyi?'up':'down';}
+  return '<div class="'+sinif+' '+renk+'" title="'+ipucu+'">'+ok+' %'+
+    Math.abs(d).toLocaleString('tr-TR',{minimumFractionDigits:1,maximumFractionDigits:1})+'</div>';
+}
+function turet(t){
+  var m=t.meta,g=t.google,s=t.shopify;
+  var ts=m.spend+g.spend;
+  return {
+    toplamHarcama:ts, gelir:s.gross, siparis:s.orders,
+    toplamRoas:bol(s.gross,ts), aov:bol(s.gross,s.orders),
+    mSpend:m.spend, mPurch:m.purch, mRoas:bol(m.pval,m.spend),
+    mCpc:bol(m.spend,m.clicks), mCtr:bol(m.clicks,m.impr)*100, mCpm:bol(m.spend,m.impr)*1000,
+    gSpend:g.spend, gConv:g.conv, gRoas:bol(g.cval,g.spend),
+    gTbm:bol(g.spend,g.clicks), gCtr:bol(g.clicks,g.impr)*100, gBgbm:bol(g.spend,g.impr)*1000
+  };
+}
+function carpanTr(v){return (Number(v)||0).toLocaleString('tr-TR',{minimumFractionDigits:2,maximumFractionDigits:2})+'x';}
+function yuzdeTr(v){return '%'+(Number(v)||0).toLocaleString('tr-TR',{minimumFractionDigits:2,maximumFractionDigits:2});}
+function lej(renk,metin){return '<div style="display:flex;align-items:center;gap:6px"><div class="pie-dot" style="background:'+renk+'"></div><div class="pie-label">'+metin+'</div></div>';}
+
+function hata(msg){
+  var el=document.getElementById('drHata');
+  if(!msg){el.style.display='none';el.textContent='';return;}
+  el.style.display='';el.textContent=msg;
+}
+
+/* ================= takvim ================= */
+var AY_ADI=['Ocak','Şubat','Mart','Nisan','Mayıs','Haziran','Temmuz','Ağustos','Eylül','Ekim','Kasım','Aralık'];
+var GUN_BASI=['Pt','Sa','Ça','Pe','Cu','Ct','Pa'];
+var ARSIV_MIN='2025-09-11', ARSIV_MAX='2026-09-10';
+var dpBas=null, dpBit=null, dpUstu=null, dpHazir=null, dpAy=null, dpAcik=false;
+
+var dpEl=document.getElementById('dp');
+var alanEl=document.getElementById('drField');
+var metinEl=document.getElementById('drText');
+var temizleEl=document.getElementById('drClear');
+
+function iso(y,a,g){return y+'-'+('0'+(a+1)).slice(-2)+'-'+('0'+g).slice(-2);}
+function isoTr(d){var p=d.split('-');return p[2]+'.'+p[1]+'.'+p[0];}
+function isoUzun(d){var p=d.split('-');return parseInt(p[2],10)+' '+AY_ADI[parseInt(p[1],10)-1]+' '+p[0];}
+function isoTarih(d){return new Date(d+'T00:00:00Z');}
+function tariheIso(t){return t.toISOString().slice(0,10);}
+function ayEkle(t,n){return new Date(Date.UTC(t.getUTCFullYear(),t.getUTCMonth()+n,1));}
+
+function alanDoldur(bas,bit){
+  metinEl.textContent=isoTr(bas)+'  —  '+isoTr(bit);
+  alanEl.classList.add('dolu');
+  temizleEl.hidden=false;
+}
+function alanSifirla(){
+  metinEl.textContent='Tarih aralığı seçin';
+  alanEl.classList.remove('dolu','on');
+  temizleEl.hidden=true;
+  dpBas=dpBit=dpUstu=dpHazir=null;
+  dpKapat();
+}
+
+function ayCiz(t){
+  var y=t.getUTCFullYear(), a=t.getUTCMonth();
+  var ilk=new Date(Date.UTC(y,a,1)).getUTCDay();
+  var kaydir=(ilk+6)%7;
+  var gunSayisi=new Date(Date.UTC(y,a+1,0)).getUTCDate();
+  var bugunIso=ARSIV_MAX;
+  var html='<div class="dp-ay">';
+  GUN_BASI.forEach(function(g){html+='<div class="dp-gunbasi">'+g+'</div>';});
+  for(var b=0;b<kaydir;b++)html+='<button class="dp-gun bos" disabled></button>';
+  for(var g=1;g<=gunSayisi;g++){
+    var d=iso(y,a,g);
+    var kapali=(d<ARSIV_MIN||d>ARSIV_MAX);
+    var bit=dpBit||dpUstu;
+    var sinif='dp-gun';
+    if(d===bugunIso)sinif+=' bugun';
+    if(dpBas&&bit&&d>dpBas&&d<bit)sinif+=' arada';
+    if(d===dpBas||(dpBit&&d===dpBit)){
+      sinif+=' uc';
+      if(dpBas&&bit&&dpBas!==bit){sinif+=(d===dpBas?' bas':' bit');}
+      else sinif+=' tek';
+    }
+    html+='<button class="'+sinif+'" data-g="'+d+'"'+(kapali?' disabled':'')+'>'+g+'</button>';
+  }
+  html+='</div>';
+  return html;
+}
+
+function dpCiz(){
+  var ikinci=ayEkle(dpAy,1);
+  document.getElementById('dpAylar').innerHTML=ayCiz(dpAy)+ayCiz(ikinci);
+  document.getElementById('dpBaslik').innerHTML=
+    '<span>'+AY_ADI[dpAy.getUTCMonth()]+' '+dpAy.getUTCFullYear()+'</span>'+
+    '<span>'+AY_ADI[ikinci.getUTCMonth()]+' '+ikinci.getUTCFullYear()+'</span>';
+  document.getElementById('dpGeri').disabled = tariheIso(dpAy)<=ARSIV_MIN.slice(0,8)+'01';
+  document.getElementById('dpIleri').disabled = tariheIso(ayEkle(dpAy,1))>=ARSIV_MAX.slice(0,8)+'01';
+
+  var sec=document.getElementById('dpSecim');
+  if(dpBas&&dpBit){
+    var gunSayi=Math.round((isoTarih(dpBit)-isoTarih(dpBas))/86400000)+1;
+    sec.innerHTML='<b>'+isoUzun(dpBas)+'</b> — <b>'+isoUzun(dpBit)+'</b> · '+gunSayi+' gün';
+  }else if(dpBas){
+    sec.innerHTML='<b>'+isoUzun(dpBas)+'</b> — bitiş tarihini seçin';
+  }else{
+    sec.textContent='Başlangıç tarihini seçin';
+  }
+  document.getElementById('dpUygula').disabled=!(dpBas&&dpBit);
+  document.querySelectorAll('.dp-hazir').forEach(function(b){
+    b.classList.toggle('secili', dpHazir===b.dataset.h);
+  });
+}
+
+function dpAc(){
+  dpAcik=true; dpEl.hidden=false; alanEl.classList.add('on');
+  var dayanak=dpBit||dpBas||ARSIV_MAX;
+  dpAy=ayEkle(new Date(dayanak.slice(0,8)+'01T00:00:00Z'),-1);
+  var enSon=new Date(ARSIV_MAX.slice(0,8)+'01T00:00:00Z');
+  if(tariheIso(ayEkle(dpAy,1))>tariheIso(enSon))dpAy=ayEkle(enSon,-1);
+  dpCiz();
+}
+function dpKapat(){dpAcik=false;dpEl.hidden=true;alanEl.classList.remove('on');dpUstu=null;}
+
+var ARSIV_HAZIR = !!(ARSIV_MIN && ARSIV_MAX);
+if(!ARSIV_HAZIR){
+  alanEl.disabled=true;
+  alanEl.style.cursor='not-allowed';
+  alanEl.style.opacity='.55';
+  metinEl.textContent='Tarih arşivi hazırlanıyor';
+  alanEl.title='Günlük arşiv henüz oluşmadı; ilk robot çalışmasından sonra kullanılabilir.';
+}
+
+alanEl.addEventListener('click',function(e){
+  if(!ARSIV_HAZIR)return;
+  e.stopPropagation();dpAcik?dpKapat():dpAc();
+});
+temizleEl.addEventListener('click',function(e){
+  e.stopPropagation();
+  alanSifirla();
+  hata('');
+  showPeriod('yesterday',document.querySelector('.seg[data-period="yesterday"]'));
+});
+document.addEventListener('click',function(e){
+  if(dpAcik&&!dpEl.contains(e.target)&&e.target!==alanEl)dpKapat();
+});
+document.addEventListener('keydown',function(e){if(e.key==='Escape'&&dpAcik)dpKapat();});
+dpEl.addEventListener('click',function(e){e.stopPropagation();});
+
+document.getElementById('dpGeri').addEventListener('click',function(){dpAy=ayEkle(dpAy,-1);dpCiz();});
+document.getElementById('dpIleri').addEventListener('click',function(){dpAy=ayEkle(dpAy,1);dpCiz();});
+document.getElementById('dpVazgec').addEventListener('click',dpKapat);
+
+document.getElementById('dpAylar').addEventListener('click',function(e){
+  var b=e.target.closest('.dp-gun');
+  if(!b||b.disabled)return;
+  var d=b.dataset.g;
+  dpHazir=null;
+  if(!dpBas||(dpBas&&dpBit)){dpBas=d;dpBit=null;}
+  else if(d<dpBas){dpBit=dpBas;dpBas=d;}
+  else {dpBit=d;}
+  dpUstu=null;
+  dpCiz();
+});
+document.getElementById('dpAylar').addEventListener('mouseover',function(e){
+  var b=e.target.closest('.dp-gun');
+  if(!b||b.disabled||!dpBas||dpBit)return;
+  if(b.dataset.g!==dpUstu){dpUstu=b.dataset.g;dpCiz();}
+});
+
+document.querySelector('.dp-side').addEventListener('click',function(e){
+  var b=e.target.closest('.dp-hazir');
+  if(!b)return;
+  var h=b.dataset.h, son=ARSIV_MAX, sonT=isoTarih(son), bas;
+  if(h==='buay'){
+    bas=son.slice(0,8)+'01';
+  }else if(h==='gecenay'){
+    var ilkGun=new Date(son.slice(0,8)+'01T00:00:00Z');
+    var gecen=ayEkle(ilkGun,-1);
+    bas=tariheIso(gecen);
+    son=tariheIso(new Date(Date.UTC(gecen.getUTCFullYear(),gecen.getUTCMonth()+1,0)));
+  }else{
+    bas=tariheIso(new Date(sonT.getTime()-(parseInt(h,10)-1)*86400000));
+  }
+  if(bas<ARSIV_MIN)bas=ARSIV_MIN;
+  if(son>ARSIV_MAX)son=ARSIV_MAX;
+  dpBas=bas;dpBit=son;dpHazir=h;dpUstu=null;
+  dpAy=ayEkle(new Date(son.slice(0,8)+'01T00:00:00Z'),-1);
+  dpCiz();
+});
+
+document.getElementById('dpUygula').addEventListener('click',function(){
+  var bas=dpBas, bit=dpBit;
+  hata('');
+  if(!bas||!bit){hata('Lütfen başlangıç ve bitiş tarihi seçin.');return;}
+  var btn=this; btn.disabled=true; btn.textContent='Yükleniyor...';
+  arsivGetir().then(function(){
+    if(bit<ARSIV_MIN||bas>ARSIV_MAX){
+      hata('Seçilen aralıkta kayıtlı veri yok. Veri aralığı: '+isoTr(ARSIV_MIN)+' — '+isoTr(ARSIV_MAX));
+      return;
+    }
+    dpKapat();
+    ozelRapor(bas,bit);
+  }).catch(function(e){
+    hata('Veri yüklenemedi: '+e.message);
+  }).then(function(){
+    btn.disabled=false; btn.textContent='Uygula';
+  });
+});
+
+
+
 </script>
 </body>
 </html>
