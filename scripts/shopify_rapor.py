@@ -121,7 +121,7 @@ def get_shopify_data(period):
             "revenue": round(hourly[h]["revenue"], 2)
         })
 
-    checkout_url = f"https://{shop}/admin/api/2024-01/checkouts.json"
+    checkout_url = f"https://{shop}/admin/api/2024-07/checkouts.json"
     checkout_params = {
         "created_at_min": start_utc,
         "created_at_max": end_utc,
